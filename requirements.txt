@@ -1,1 +1,6 @@
 mongomock>=3.23.0,<4.0.0
+
+# Development requirements
+flake8
+flake8-quotes
+pytest
