@@ -1,6 +1,7 @@
 # mongomock-motor
 
-Mock for [AsyncIOMotorClient](https://motor.readthedocs.io/en/stable/api-asyncio/asyncio_motor_client.html) (Database, Collection, e.t.c) built on top of [mongomock](https://github.com/mongomock/mongomock) library.
+Best effort mock for [AsyncIOMotorClient](https://motor.readthedocs.io/en/stable/api-asyncio/asyncio_motor_client.html)
+(Database, Collection, e.t.c) built on top of [mongomock](https://github.com/mongomock/mongomock) library.
 
 ## Example / Showcase
 
