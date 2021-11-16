@@ -20,6 +20,7 @@ def masquerade_class(name):
         return Wrapper
     return decorator
 
+
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCursor')
 class AsyncCursor():
     def __init__(self, cursor):
