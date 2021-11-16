@@ -40,6 +40,7 @@ class AsyncMongoMockCollection():
         "create_index",
         "ensure_index",
         "map_reduce",
+        "index_information",
     ]
 
     def __init__(self, collection):
