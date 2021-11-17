@@ -17,7 +17,7 @@ class Product(Document):
 
 
 async def test_beanie():
-    client = AsyncMongoMockClient()
+    client = AsyncMongoMockClient('mongodb://user:pass@host:27017', connectTimeoutMS=250)
 
     await init_beanie(database=client.beanie_test, document_models=[Product])
 
