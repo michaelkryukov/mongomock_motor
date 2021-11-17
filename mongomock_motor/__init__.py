@@ -1,6 +1,27 @@
+from functools import wraps
+import importlib
 from mongomock import MongoClient
 
 
+def masquerade_class(name):
+    module_name, target_name = name.rsplit('.', 1)
+
+    try:
+        target = getattr(importlib.import_module(module_name), target_name)
+    except Exception:
+        return lambda cls: cls
+
+    def decorator(cls):
+        @wraps(target, updated=())
+        class Wrapper(cls):
+            @property
+            def __class__(self):
+                return target
+        return Wrapper
+    return decorator
+
+
+@masquerade_class('motor.motor_asyncio.AsyncIOMotorCursor')
 class AsyncCursor():
     def __init__(self, cursor):
         self.__cursor = cursor
@@ -18,28 +39,31 @@ class AsyncCursor():
         return list(self.__cursor)
 
 
+@masquerade_class('motor.motor_asyncio.AsyncIOMotorCollection')
 class AsyncMongoMockCollection():
     ASYNC_METHODS = [
-        "find_one",
-        "find_one_and_delete",
-        "find_one_and_replace",
-        "find_one_and_update",
-        "find_and_modify",
-        "save",
-        "delete_one",
-        "delete_many",
-        "count",
-        "insert_one",
-        "insert_many",
-        "update_one",
-        "update_many",
-        "replace_one",
-        "count_documents",
-        "estimated_document_count",
-        "drop",
-        "create_index",
-        "ensure_index",
-        "map_reduce",
+        'count_documents',
+        'count',
+        'create_index',
+        'create_indexes',
+        'delete_many',
+        'delete_one',
+        'drop',
+        'ensure_index',
+        'estimated_document_count',
+        'find_and_modify',
+        'find_one_and_delete',
+        'find_one_and_replace',
+        'find_one_and_update',
+        'find_one',
+        'index_information',
+        'insert_many',
+        'insert_one',
+        'map_reduce',
+        'replace_one',
+        'save',
+        'update_many',
+        'update_one',
     ]
 
     def __init__(self, collection):
@@ -57,6 +81,7 @@ class AsyncMongoMockCollection():
         return AsyncCursor(self.__collection.find(*args, **kwargs))
 
 
+@masquerade_class('motor.motor_asyncio.AsyncIOMotorDatabase')
 class AsyncMongoMockDatabase():
     def __init__(self, database):
         self.__database = database
@@ -71,8 +96,9 @@ class AsyncMongoMockDatabase():
         return self.__collections[name]
 
 
+@masquerade_class('motor.motor_asyncio.AsyncIOMotorClient')
 class AsyncMongoMockClient():
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.__client = MongoClient()
         self.__databases = {}
 
