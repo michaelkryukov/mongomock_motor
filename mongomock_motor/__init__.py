@@ -79,6 +79,9 @@ class AsyncMongoMockCollection():
 
     def find(self, *args, **kwargs) -> AsyncCursor:
         return AsyncCursor(self.__collection.find(*args, **kwargs))
+    
+    def aggregate(self, *args, **kwargs) -> AsyncCursor:
+        return AsyncCursor(self.__collection.aggregate(*args, **kwargs))
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorDatabase')
