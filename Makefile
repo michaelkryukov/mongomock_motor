@@ -9,5 +9,6 @@ lint:
 
 test:
 	python3 -c "import pytest" || python3 -m pip install pytest
+	python3 -c "import anyio" || python3 -m pip install anyio
 	python3 -c "import requests" || python3 -m pip install requests
 	ENVIRONMENT=test python3 -m pytest tests/

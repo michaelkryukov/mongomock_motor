@@ -1,6 +1,7 @@
 from typing import Optional
 from beanie import Document, Indexed, init_beanie
 from pydantic import BaseModel
+import pytest
 from mongomock_motor import AsyncMongoMockClient
 
 
@@ -16,6 +17,7 @@ class Product(Document):
     category: Category
 
 
+@pytest.mark.anyio
 async def test_beanie():
     client = AsyncMongoMockClient('mongodb://user:pass@host:27017', connectTimeoutMS=250)
 
