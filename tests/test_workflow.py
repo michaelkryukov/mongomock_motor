@@ -28,3 +28,10 @@ async def test_workflow():
     assert docs[0]['_id'] == doc_id
     assert docs[0]['a'] == 3
     assert docs[0]['b'] == 1
+    
+    pipeline = [{"$match": {"a": 3}}]
+    docs = await collection.aggregate(pipeline).to_list(None)
+    assert len(docs) == 1
+    assert docs[0]['_id'] == doc_id
+    assert docs[0]['a'] == 3
+    assert docs[0]['b'] == 1
