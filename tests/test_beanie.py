@@ -48,7 +48,7 @@ class House(Document):
     name: str
     door: Link[Door]
 
-from beanie.odm.utils.parsing import parse_obj
+
 @pytest.mark.anyio
 async def test_beanie_links():
     client = AsyncMongoMockClient('mongodb://user:pass@host:27017', connectTimeoutMS=250)
@@ -58,7 +58,8 @@ async def test_beanie_links():
     house = House(name='Nice House', door=Door(height=2.1))
     await house.insert(link_rule=WriteRules.WRITE)
 
-    houses = await House.find(House.name == 'Nice House', fetch_links=True).to_list()
-
+    houses = await House.find(House.name == 'Nice House').to_list()
     assert len(houses) == 1
-    assert houses[0].door.height == 2
+    house = houses[0]
+    await house.fetch_all_links()
+    assert house.door.height == 2

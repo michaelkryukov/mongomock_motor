@@ -87,19 +87,12 @@ class AsyncMongoMockCollection():
         return AsyncCursor(self.__collection.aggregate(*args, **kwargs))
 
 
-DEFAULT_SHORT_BUILD_INFO = {
-    'ok': 1.0,
-    'version': '3.6.6',
-    'gitVersion': '6405d65b1d6432e138b44c13085d0c2fe235d6bd',
-}
-
-
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorDatabase')
 class AsyncMongoMockDatabase():
     def __init__(self, database, mock_build_info=None):
         self.__database = database
         self.__collections = {}
-        self.__build_info = mock_build_info or DEFAULT_SHORT_BUILD_INFO
+        self.__build_info = mock_build_info or {'ok': 1.0, 'version': '5.0.5'}
 
     async def command(self, *args, **kwargs):
         try:

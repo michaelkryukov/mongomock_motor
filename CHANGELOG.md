@@ -1,10 +1,11 @@
 # Changelog
 
-## v0.0.4 (WIP)
+## v0.0.4
 
 - Add limited support for `{buildInfo: 1}` command.
 - Add attributes proxying for collections.
-- Bump version for beanie, add tests for links.
+- Add tests for links (limited).
+- Bump version for beanie, mongomock
 
 ## v0.0.3
 
