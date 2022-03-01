@@ -77,6 +77,9 @@ class AsyncMongoMockCollection():
 
             setattr(self, method_name, make_wrapper(method_name))
 
+    def __getattr__(self, name):
+        return getattr(self.__collection, name)
+
     def find(self, *args, **kwargs) -> AsyncCursor:
         return AsyncCursor(self.__collection.find(*args, **kwargs))
 
@@ -84,31 +87,53 @@ class AsyncMongoMockCollection():
         return AsyncCursor(self.__collection.aggregate(*args, **kwargs))
 
 
+DEFAULT_SHORT_BUILD_INFO = {
+    'ok': 1.0,
+    'version': '3.6.6',
+    'gitVersion': '6405d65b1d6432e138b44c13085d0c2fe235d6bd',
+}
+
+
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorDatabase')
 class AsyncMongoMockDatabase():
-    def __init__(self, database):
+    def __init__(self, database, mock_build_info=None):
         self.__database = database
         self.__collections = {}
+        self.__build_info = mock_build_info or DEFAULT_SHORT_BUILD_INFO
+
+    async def command(self, *args, **kwargs):
+        try:
+            return getattr(self.__database, 'command')(*args, **kwargs)
+        except NotImplementedError:
+            if args == ({'buildInfo': 1},) and not kwargs:
+                return self.__build_info
+            raise
 
     def __getitem__(self, name):
         return getattr(self, name)
 
     def __getattr__(self, name):
         if name not in self.__collections:
-            self.__collections[name] = AsyncMongoMockCollection(self.__database[name])
+            self.__collections[name] = AsyncMongoMockCollection(
+                self.__database[name],
+            )
         return self.__collections[name]
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorClient')
 class AsyncMongoMockClient():
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, mock_build_info=None, **kwargs):
         self.__client = MongoClient()
         self.__databases = {}
+        self.__build_info = mock_build_info
 
     def __getitem__(self, name):
         return getattr(self, name)
 
     def __getattr__(self, name):
         if name not in self.__databases:
-            self.__databases[name] = AsyncMongoMockDatabase(self.__client[name])
+            self.__databases[name] = AsyncMongoMockDatabase(
+                self.__client[name],
+                mock_build_info=self.__build_info,
+            )
         return self.__databases[name]

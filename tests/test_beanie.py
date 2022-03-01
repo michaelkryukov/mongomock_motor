@@ -1,5 +1,5 @@
 from typing import Optional
-from beanie import Document, Indexed, init_beanie
+from beanie import Document, Link, WriteRules, Indexed, init_beanie
 from pydantic import BaseModel
 import pytest
 from mongomock_motor import AsyncMongoMockClient
@@ -37,3 +37,28 @@ async def test_beanie():
     product = await Product.find_one(Product.category.name == 'Chocolade')
     assert product.name == 'Gold bar'
     assert product.category.description == chocolate.description
+
+
+class Door(Document):
+    height: int = 2
+    width: int = 1
+
+
+class House(Document):
+    name: str
+    door: Link[Door]
+
+from beanie.odm.utils.parsing import parse_obj
+@pytest.mark.anyio
+async def test_beanie_links():
+    client = AsyncMongoMockClient('mongodb://user:pass@host:27017', connectTimeoutMS=250)
+
+    await init_beanie(database=client.beanie_test, document_models=[Door, House])
+
+    house = House(name='Nice House', door=Door(height=2.1))
+    await house.insert(link_rule=WriteRules.WRITE)
+
+    houses = await House.find(House.name == 'Nice House', fetch_links=True).to_list()
+
+    assert len(houses) == 1
+    assert houses[0].door.height == 2
