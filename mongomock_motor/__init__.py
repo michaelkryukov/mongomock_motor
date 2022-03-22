@@ -1,5 +1,6 @@
 from functools import wraps
 import importlib
+from typing import Any
 from mongomock import MongoClient
 
 
@@ -37,6 +38,30 @@ class AsyncCursor():
 
     async def to_list(self, *args, **kwargs):
         return list(self.__cursor)
+
+    def skip(self, *args: Any, **kwargs: Any):
+        """Skips the first skip results of this cursor.
+
+        Args:
+            args (Any): Variable length argument list.
+            kwargs (Any): Arbitrary keyword arguments.
+
+        Returns:
+            AsyncCursor: AsyncIOMotorCursor object.
+        """
+        return AsyncCursor(self.__cursor.skip(*args, **kwargs))
+
+    def limit(self, *args: Any, **kwargs: Any):
+        """Limits the number of results to be returned by this cursor.
+
+        Args:
+            args (Any): Variable length argument list.
+            kwargs (Any): Arbitrary keyword arguments.
+
+        Returns:
+            AsyncCursor: AsyncIOMotorCursor object.
+        """
+        return AsyncCursor(self.__cursor.limit(*args, **kwargs))
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCollection')
