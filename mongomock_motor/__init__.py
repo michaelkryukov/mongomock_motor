@@ -23,8 +23,38 @@ def masquerade_class(name):
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCursor')
 class AsyncCursor():
+    PROXIED_CURSOR_CHAINING_METHODS = [
+        'add_option',
+        'allow_disk_use',
+        'collation',
+        'comment',
+        'hint',
+        'limit',
+        'max_await_time_ms',
+        'max_scan',
+        'max_time_ms',
+        'max',
+        'min',
+        'remove_option',
+        'skip',
+        'sort',
+        'where',
+    ]
+
     def __init__(self, cursor):
         self.__cursor = cursor
+
+        for method_name in self.PROXIED_CURSOR_CHAINING_METHODS:
+            def make_wrapper(method_name):
+                def wrapper(*args, **kwargs):
+                    getattr(self.__cursor, method_name)(*args, **kwargs)
+                    return self
+                return wrapper
+
+            setattr(self, method_name, make_wrapper(method_name))
+
+    def __getattr__(self, name):
+        return getattr(self.__cursor, name)
 
     def __aiter__(self):
         return self

@@ -1,5 +1,10 @@
 # Changelog
 
+# v0.0.5
+
+- Make `AsyncCursor` more similar to `AsyncIOMotorCursor` (add support
+    for `limit`, `skip`, `sort`, e.t.c.) + tests.
+
 ## v0.0.4
 
 - Add limited support for `{buildInfo: 1}` command.

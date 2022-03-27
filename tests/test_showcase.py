@@ -4,7 +4,7 @@ from mongomock_motor import AsyncMongoMockClient
 
 @pytest.mark.anyio
 async def test_mock_client():
-    collection = AsyncMongoMockClient()['tests']['test-1']
+    collection = AsyncMongoMockClient()['tests']['test']
 
     assert await collection.find({}).to_list(None) == []
 
