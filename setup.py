@@ -27,7 +27,7 @@ setuptools.setup(
     url="https://github.com/michaelkryukov/mongomock_motor",
     packages=setuptools.find_packages(),
     install_requires=[
-        "mongomock>=3.23.0,<4.0.0",
+        "mongomock>=3.23.0,<5.0.0",
     ],
     python_requires=">=3.6",
     classifiers=[
