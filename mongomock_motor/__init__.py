@@ -146,7 +146,7 @@ class AsyncMongoMockDatabase():
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorClient')
 class AsyncMongoMockClient():
     def __init__(self, *args, mock_build_info=None, **kwargs):
-        self.__client = MongoClient()
+        self.__client = MongoClient(*args, **kwargs)
         self.__databases = {}
         self.__build_info = mock_build_info
 
