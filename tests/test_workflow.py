@@ -1,4 +1,6 @@
+import bson
 import pytest
+from datetime import datetime, timezone
 from mongomock_motor import AsyncMongoMockClient
 
 
@@ -31,3 +33,21 @@ async def test_workflow():
     assert docs[0]['_id'] == doc_id
     assert docs[0]['a'] == 3
     assert docs[0]['b'] == 1
+
+
+@pytest.mark.anyio
+async def test_tz_awareness():
+    tz_aware_date = datetime(2022, 4, 26, tzinfo=timezone.utc)
+    
+    # Naive
+    collection = AsyncMongoMockClient()['tests']['test']
+    await collection.insert_one({'d': tz_aware_date})
+    result = await collection.find_one()
+    assert result["d"].tzinfo is None
+
+    # Aware
+    collection = AsyncMongoMockClient(tz_aware=True)['tests']['test']
+    await collection.insert_one({'d': tz_aware_date})
+    result = await collection.find_one()
+    assert result["d"].tzinfo.__class__ is bson.tz_util.FixedOffset
+
