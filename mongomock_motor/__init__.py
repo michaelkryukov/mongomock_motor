@@ -1,6 +1,7 @@
 from functools import wraps
 import importlib
 from mongomock import MongoClient
+from .patches import _patch_collection_internals
 
 
 def masquerade_class(name):
@@ -138,7 +139,7 @@ class AsyncMongoMockDatabase():
     def __getattr__(self, name):
         if name not in self.__collections:
             self.__collections[name] = AsyncMongoMockCollection(
-                self.__database[name],
+                _patch_collection_internals(self.__database[name]),
             )
         return self.__collections[name]
 
