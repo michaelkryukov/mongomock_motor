@@ -73,6 +73,7 @@ class AsyncCursor():
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCollection')
 class AsyncMongoMockCollection():
     ASYNC_METHODS = [
+        'bulk_write',
         'count_documents',
         'count',
         'create_index',
