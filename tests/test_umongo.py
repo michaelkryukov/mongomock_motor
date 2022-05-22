@@ -1,4 +1,3 @@
-from pymongo.errors import DuplicateKeyError
 from marshmallow.exceptions import ValidationError
 from umongo import Document, fields
 from umongo.instance import Instance
@@ -14,10 +13,10 @@ async def test_umongo():
     class Something(Document):
         field1 = fields.StrField(required=True, unique=True)
         field2 = fields.StrField()
-        related = fields.ListField(fields.ReferenceField("Something"))
+        related = fields.ListField(fields.ReferenceField('Something'))
 
         class Meta:
-            collection_name = "something"
+            collection_name = 'something'
 
     await Something.ensure_indexes()
 

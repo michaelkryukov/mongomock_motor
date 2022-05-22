@@ -28,7 +28,7 @@ async def test_workflow():
     assert docs[0]['a'] == 3
     assert docs[0]['b'] == 1
 
-    pipeline = [{"$match": {"a": 3}}]
+    pipeline = [{'$match': {'a': 3}}]
     docs = await collection.aggregate(pipeline).to_list(None)
     assert len(docs) == 1
     assert docs[0]['_id'] == doc_id
@@ -39,18 +39,18 @@ async def test_workflow():
 @pytest.mark.anyio
 async def test_tz_awareness():
     tz_aware_date = datetime(2022, 4, 26, tzinfo=timezone.utc)
-    
+
     # Naive
     collection = AsyncMongoMockClient()['tests']['test']
     await collection.insert_one({'d': tz_aware_date})
     result = await collection.find_one()
-    assert result["d"].tzinfo is None
+    assert result['d'].tzinfo is None
 
     # Aware
     collection = AsyncMongoMockClient(tz_aware=True)['tests']['test']
     await collection.insert_one({'d': tz_aware_date})
     result = await collection.find_one()
-    assert result["d"].tzinfo.__class__ is bson.tz_util.FixedOffset
+    assert result['d'].tzinfo.__class__ is bson.tz_util.FixedOffset
 
 
 @pytest.mark.anyio

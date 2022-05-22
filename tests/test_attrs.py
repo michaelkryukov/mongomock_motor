@@ -16,4 +16,3 @@ async def test_attrs():
 
     database = client.get_database('tests', read_preference=ReadPreference.SECONDARY)
     assert await database.test.find_one(projection={'_id': 0, 'a': 1}) == {'a': 1}
-
