@@ -22,55 +22,60 @@ def masquerade_class(name):
     return decorator
 
 
-def apply_async_wrappers(instance, async_methods, target):
-    for method_name in async_methods:
-        def make_wrapper(method_name):
-            async def wrapper(*args, **kwargs):
-                return getattr(target, method_name)(*args, **kwargs)
-            return wrapper
+def with_async_methods(source, async_methods):
+    def decorator(cls):
+        for method_name in async_methods:
+            def make_wrapper(method_name):
+                async def wrapper(self, *args, **kwargs):
+                    proxy_source = self.__dict__.get(f'_{cls.__name__}{source}')
+                    return getattr(proxy_source, method_name)(*args, **kwargs)
+                return wrapper
 
-        setattr(instance, method_name, make_wrapper(method_name))
+            setattr(cls, method_name, make_wrapper(method_name))
+
+        return cls
+
+    return decorator
 
 
-def apply_chaining_wrappers(instance, chaining_methods, target):
-    for method_name in chaining_methods:
-        def make_wrapper(method_name):
-            def wrapper(*args, **kwargs):
-                getattr(target, method_name)(*args, **kwargs)
-                return instance
-            return wrapper
+def with_cursor_chaining_methods(source, chaining_methods):
+    def decorator(cls):
+        for method_name in chaining_methods:
+            def make_wrapper(method_name):
+                def wrapper(self, *args, **kwargs):
+                    proxy_source = self.__dict__.get(f'_{cls.__name__}{source}')
+                    getattr(proxy_source, method_name)(*args, **kwargs)
+                    return self
+                return wrapper
 
-        setattr(instance, method_name, make_wrapper(method_name))
+            setattr(cls, method_name, make_wrapper(method_name))
+
+        return cls
+
+    return decorator
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCursor')
+@with_cursor_chaining_methods('__cursor', [
+    'add_option',
+    'allow_disk_use',
+    'collation',
+    'comment',
+    'hint',
+    'limit',
+    'max_await_time_ms',
+    'max_scan',
+    'max_time_ms',
+    'max',
+    'min',
+    'remove_option',
+    'skip',
+    'sort',
+    'where',
+])
 class AsyncCursor():
-    PROXIED_CURSOR_CHAINING_METHODS = [
-        'add_option',
-        'allow_disk_use',
-        'collation',
-        'comment',
-        'hint',
-        'limit',
-        'max_await_time_ms',
-        'max_scan',
-        'max_time_ms',
-        'max',
-        'min',
-        'remove_option',
-        'skip',
-        'sort',
-        'where',
-    ]
-
     def __init__(self, cursor):
         self.__cursor = cursor
-
-        apply_chaining_wrappers(
-            self,
-            self.PROXIED_CURSOR_CHAINING_METHODS,
-            self.__cursor,
-        )
 
     def __getattr__(self, name):
         return getattr(self.__cursor, name)
@@ -89,42 +94,40 @@ class AsyncCursor():
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCollection')
+@with_async_methods('__collection', [
+    'bulk_write',
+    'count_documents',
+    'count',  # deprecated
+    'create_index',
+    'create_indexes',
+    'delete_many',
+    'delete_one',
+    'drop_index',
+    'drop_indexes',
+    'drop',
+    'ensure_index',
+    'estimated_document_count',
+    'find_and_modify',  # deprecated
+    'find_one_and_delete',
+    'find_one_and_replace',
+    'find_one_and_update',
+    'find_one',
+    'index_information',
+    'inline_map_reduce',
+    'insert_many',
+    'insert_one',
+    'map_reduce',
+    'options',
+    'reindex',
+    'rename',
+    'replace_one',
+    'save',
+    'update_many',
+    'update_one',
+])
 class AsyncMongoMockCollection():
-    ASYNC_METHODS = [
-        'bulk_write',
-        'count_documents',
-        'count',  # deprecated
-        'create_index',
-        'create_indexes',
-        'delete_many',
-        'delete_one',
-        'drop_index',
-        'drop_indexes',
-        'drop',
-        'ensure_index',
-        'estimated_document_count',
-        'find_and_modify',  # deprecated
-        'find_one_and_delete',
-        'find_one_and_replace',
-        'find_one_and_update',
-        'find_one',
-        'index_information',
-        'inline_map_reduce',
-        'insert_many',
-        'insert_one',
-        'map_reduce',
-        'options',
-        'reindex',
-        'rename',
-        'replace_one',
-        'save',
-        'update_many',
-        'update_one',
-    ]
-
     def __init__(self, collection):
         self.__collection = collection
-        apply_async_wrappers(self, self.ASYNC_METHODS, self.__collection)
 
     def __getattr__(self, name):
         return getattr(self.__collection, name)
@@ -137,19 +140,17 @@ class AsyncMongoMockCollection():
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorDatabase')
+@with_async_methods('__database', [
+    'create_collection',
+    'dereference',
+    'drop_collection',
+    'list_collection_names',
+    'validate_collection',
+])
 class AsyncMongoMockDatabase():
-    ASYNC_METHODS = [
-        'create_collection',
-        'dereference',
-        'drop_collection',
-        'list_collection_names',
-        'validate_collection',
-    ]
-
     def __init__(self, database, mock_build_info=None):
         self.__database = database
         self.__build_info = mock_build_info or {'ok': 1.0, 'version': '5.0.5'}
-        apply_async_wrappers(self, self.ASYNC_METHODS, self.__database)
 
     def get_collection(self, *args, **kwargs):
         return AsyncMongoMockCollection(
@@ -180,18 +181,16 @@ class AsyncMongoMockDatabase():
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorClient')
+@with_async_methods('__client', [
+    'drop_database',
+    'list_database_names',
+    'list_databases',
+    'server_info',
+])
 class AsyncMongoMockClient():
-    ASYNC_METHODS = [
-        'drop_database',
-        'list_database_names',
-        'list_databases',
-        'server_info',
-    ]
-
     def __init__(self, *args, mock_build_info=None, **kwargs):
         self.__client = MongoClient(*args, **kwargs)
         self.__build_info = mock_build_info
-        apply_async_wrappers(self, self.ASYNC_METHODS, self.__client)
 
     def get_database(self, *args, **kwargs):
         return AsyncMongoMockDatabase(
