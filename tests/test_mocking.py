@@ -1,4 +1,4 @@
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 from bson import ObjectId
 from pymongo.results import UpdateResult
 import pytest
@@ -16,11 +16,17 @@ async def sample_function(collection):
         raise RuntimeError()
 
 
+def async_wrapper(value):
+    async def wrapper(*args, **kwargs):
+        return value
+    return wrapper
+
+
 @pytest.mark.asyncio
 async def test_patch():
     collection = AsyncMongoMockClient()['test']['test']
 
-    with patch('mongomock_motor.AsyncMongoMockCollection.update_one', AsyncMock(return_value=UpdateResult({}, False))):
+    with patch('mongomock_motor.AsyncMongoMockCollection.update_one', new=async_wrapper(UpdateResult({}, False))):
         with pytest.raises(RuntimeError):
             await sample_function(collection)
 
@@ -29,6 +35,6 @@ async def test_patch():
 async def test_patch_object():
     collection = AsyncMongoMockClient()['test']['test']
 
-    with patch.object(collection, 'update_one', AsyncMock(return_value=UpdateResult({}, False))):
+    with patch.object(collection, 'update_one', new=async_wrapper(UpdateResult({}, False))):
         with pytest.raises(RuntimeError):
             await sample_function(collection)
