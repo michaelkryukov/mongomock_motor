@@ -105,6 +105,7 @@ class AsyncCursor():
     'drop_index',
     'drop_indexes',
     'drop',
+    'distinct',
     'ensure_index',
     'estimated_document_count',
     'find_and_modify',  # deprecated
