@@ -36,10 +36,8 @@ def _provide_error_details(collection, data, exception):
     return exception
 
 
-def _patch_collection_internals(collection):
+def _patch_insert(collection):
     """
-    # Details for DuplicateKeyError
-
     Adds details with 'keyPattern' and 'keyValue' when
     raising DuplicateKeyError from _insert
     https://github.com/mongomock/mongomock/issues/773
@@ -55,3 +53,41 @@ def _patch_collection_internals(collection):
     collection._insert = insert
 
     return collection
+
+
+def _normalize_strings(obj):
+    if isinstance(obj, list):
+        return [_normalize_strings(v) for v in obj]
+
+    if isinstance(obj, dict):
+        return {_normalize_strings(k): _normalize_strings(v) for k, v in obj.items()}
+
+    if isinstance(obj, str):
+        return str(obj)
+
+    return obj
+
+
+def _patch_iter_documents(collection):
+    """
+    When using beanie, keys can have "ExpressionField" type,
+    that is inherited from "str". Looks like pymongo works ok
+    with that, so we should be too.
+    """
+    _iter_documents = collection._iter_documents
+
+    def iter_documents(filter):
+        return _iter_documents(_normalize_strings(filter))
+
+    collection._iter_documents = iter_documents
+
+    return collection
+
+
+def _patch_collection_internals(collection):
+    collection = _patch_insert(collection)
+    collection = _patch_iter_documents(collection)
+    return collection
+
+
+__all__ = ['_patch_collection_internals']

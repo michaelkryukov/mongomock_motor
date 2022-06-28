@@ -24,17 +24,21 @@ async def test_beanie():
     await init_beanie(database=client.beanie_test, document_models=[Product])
 
     chocolate = Category(name='Chocolate', description='A preparation of roasted and ground cacao seeds.')
+
     tonybar = Product(name="Tony's", price=5.95, category=chocolate)
     await tonybar.insert()
 
-    find_many = Product.find_many(Product.category == chocolate)
+    markbar = Product(name="Mark's", price=19.95, category=chocolate)
+    await markbar.insert()
+
+    find_many = Product.find_many(Product.category == chocolate, Product.price < 10)
     assert find_many.motor_cursor
     assert await find_many.count() == 1
 
     product = await Product.find_one(Product.price < 10)
     await product.set({Product.name: 'Gold bar'})
 
-    product = await Product.find_one(Product.category.name == 'Chocolade')
+    product = await Product.find_one(Product.category.name == 'Chocolate')
     assert product.name == 'Gold bar'
     assert product.category.description == chocolate.description
 
