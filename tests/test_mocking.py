@@ -5,6 +5,7 @@ import pytest
 from mongomock_motor import AsyncMongoMockClient
 
 
+@pytest.mark.anyio
 async def sample_function(collection):
     result = await collection.update_one(
         filter={'_id': ObjectId()},
@@ -22,7 +23,7 @@ def async_wrapper(value):
     return wrapper
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_patch():
     collection = AsyncMongoMockClient()['test']['test']
 
@@ -31,7 +32,7 @@ async def test_patch():
             await sample_function(collection)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_patch_object():
     collection = AsyncMongoMockClient()['test']['test']
 
