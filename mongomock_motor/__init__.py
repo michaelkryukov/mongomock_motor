@@ -93,6 +93,27 @@ class AsyncCursor():
         return list(self.__cursor)
 
 
+@masquerade_class('motor.motor_asyncio.AsyncIOMotorLatentCommandCursor')
+class AsyncLatentCommandCursor():
+    def __init__(self, cursor):
+        self.__cursor = cursor
+
+    def __getattr__(self, name):
+        return getattr(self.__cursor, name)
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        try:
+            return next(self.__cursor)
+        except StopIteration:
+            raise StopAsyncIteration()
+
+    async def to_list(self, *args, **kwargs):
+        return list(self.__cursor)
+
+
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCollection')
 @with_async_methods('__collection', [
     'bulk_write',
@@ -136,8 +157,8 @@ class AsyncMongoMockCollection():
     def find(self, *args, **kwargs) -> AsyncCursor:
         return AsyncCursor(self.__collection.find(*args, **kwargs))
 
-    def aggregate(self, *args, **kwargs) -> AsyncCursor:
-        return AsyncCursor(self.__collection.aggregate(*args, **kwargs))
+    def aggregate(self, *args, **kwargs) -> AsyncLatentCommandCursor:
+        return AsyncLatentCommandCursor(self.__collection.aggregate(*args, **kwargs))
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorDatabase')
