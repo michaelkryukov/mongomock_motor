@@ -44,3 +44,14 @@ async def test_skip_and_limit():
         {'i': EXPECTED_DOCUMENTS_COUNT - 3},
         {'i': EXPECTED_DOCUMENTS_COUNT - 4},
     ]
+
+
+@pytest.mark.anyio
+async def test_aggregate():
+    collection = AsyncMongoMockClient()['tests']['test']
+
+    # Insert sample documents into database
+    await collection.insert_many([{'i': i} for i in range(EXPECTED_DOCUMENTS_COUNT)])
+
+    docs = await collection.aggregate([{'$match': {'i': 0}}]).to_list()
+    assert len(docs) == 1
