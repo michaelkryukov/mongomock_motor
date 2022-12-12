@@ -89,6 +89,12 @@ class AsyncCursor():
         except StopIteration:
             raise StopAsyncIteration()
 
+    def clone(self):
+        return AsyncCursor(self.__cursor.clone())
+
+    async def distinct(self, *args, **kwargs):
+        return self.__cursor.distinct(*args, **kwargs)
+
     async def to_list(self, *args, **kwargs):
         return list(self.__cursor)
 
@@ -148,8 +154,12 @@ class AsyncLatentCommandCursor():
     'update_one',
 ])
 class AsyncMongoMockCollection():
-    def __init__(self, collection):
+    def __init__(self, database, collection):
+        self.database = database
         self.__collection = collection
+
+    def __eq__(self, other):
+        return self.__collection == other.__collection
 
     def __getattr__(self, name):
         return getattr(self.__collection, name)
@@ -170,12 +180,14 @@ class AsyncMongoMockCollection():
     'validate_collection',
 ])
 class AsyncMongoMockDatabase():
-    def __init__(self, database, mock_build_info=None):
+    def __init__(self, client, database, mock_build_info=None):
+        self.client = client
         self.__database = database
         self.__build_info = mock_build_info or {'ok': 1.0, 'version': '5.0.5'}
 
     def get_collection(self, *args, **kwargs):
         return AsyncMongoMockCollection(
+            self,
             _patch_collection_internals(
                 self.__database.get_collection(*args, **kwargs),
             ),
@@ -191,6 +203,9 @@ class AsyncMongoMockDatabase():
             if args == ({'buildInfo': 1},) and not kwargs:
                 return self.__build_info
             raise
+
+    def __eq__(self, other):
+        return self.__database == other.__database
 
     def __getitem__(self, name):
         return self.get_collection(name)
@@ -216,9 +231,13 @@ class AsyncMongoMockClient():
 
     def get_database(self, *args, **kwargs):
         return AsyncMongoMockDatabase(
+            self,
             self.__client.get_database(*args, **kwargs),
             mock_build_info=self.__build_info,
         )
+
+    def __eq__(self, other):
+        return self.__client == other.__client
 
     def __getitem__(self, name):
         return self.get_database(name)
