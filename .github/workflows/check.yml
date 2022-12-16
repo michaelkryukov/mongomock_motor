@@ -29,5 +29,5 @@ jobs:
         python -m pip install -r requirements.txt
     - name: Lint with flake8 and test with pytest
       run: |
-        make link
+        make lint
         make test
