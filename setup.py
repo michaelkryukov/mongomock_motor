@@ -5,10 +5,13 @@
 :license: MIT, see LICENSE for more details.
 """
 
+import os
 import setuptools
 
 
-VERSION = "0.0.13"
+assert os.environ.get('GITHUB_REF_TYPE') == 'tag'
+assert os.environ.get('GITHUB_REF_NAME')
+VERSION = os.environ['GITHUB_REF_NAME']
 
 
 with open("README.md", "r") as fh:

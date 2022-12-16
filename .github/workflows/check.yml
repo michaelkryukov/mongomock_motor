@@ -27,10 +27,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -r requirements.txt
-    - name: Lint with flake8
+    - name: Lint with flake8 and test with pytest
       run: |
-        flake8 mongomock_motor/ --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 mongomock_motor/ --count --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        python3 -m pytest tests/
+        make link
+        make test
