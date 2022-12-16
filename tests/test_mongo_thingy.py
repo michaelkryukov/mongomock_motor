@@ -17,7 +17,10 @@ async def test_mongo_thingy():
     something1 = Something(field1='A', field2=':)', related=[])
     await something1.save()
 
-    with pytest.raises(DuplicateKeyError, match="^E11000 Duplicate Key Error, full error: {'keyValue': {'field1': 'A'}, 'keyPattern': {'field1': 1}}$"):
+    with pytest.raises(
+        DuplicateKeyError,
+        match="^E11000 Duplicate Key Error, full error: {'keyValue': {'field1': 'A'}, 'keyPattern': {'field1': 1}}$",
+    ):
         duplicate = Something(field1='A', field2=':)', related=[])
         await duplicate.save()
 
