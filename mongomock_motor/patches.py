@@ -1,3 +1,5 @@
+from enum import Enum
+
 from mongomock import DuplicateKeyError, helpers
 
 
@@ -61,6 +63,9 @@ def _normalize_strings(obj):
 
     if isinstance(obj, dict):
         return {_normalize_strings(k): _normalize_strings(v) for k, v in obj.items()}
+
+    if isinstance(obj, Enum):
+        return obj.value
 
     if isinstance(obj, str):
         return str(obj)

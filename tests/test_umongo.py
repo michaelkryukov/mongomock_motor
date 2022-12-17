@@ -1,3 +1,4 @@
+from enum import Enum
 from marshmallow.exceptions import ValidationError
 from umongo import Document, fields
 from umongo.instance import Instance
@@ -40,3 +41,21 @@ async def test_umongo():
     assert first_related.field1 == 'A'
     assert first_related.field2 == ':)'
     assert first_related.related == []
+
+
+@pytest.mark.anyio
+async def test_umongo_enums():
+    instance = Instance.from_db(AsyncMongoMockClient()['tests'])
+
+    class Importance(str, Enum):
+        HIGH = 'high'
+        LOW = 'low'
+
+    @instance.register
+    class Something(Document):
+        importance = fields.StrField()
+
+    something1 = Something(importance='high')
+    await something1.commit()
+
+    assert await Something.count_documents({'importance': Importance.HIGH})

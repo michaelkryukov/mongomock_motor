@@ -1,3 +1,4 @@
+from enum import Enum
 from mongo_thingy import connect, AsyncThingy
 import pytest
 from mongomock_motor import AsyncMongoMockClient
@@ -32,3 +33,20 @@ async def test_mongo_thingy():
     assert found.field1 == 'B'
     assert found.field2 == ';)'
     assert len(found.related) == 1
+
+
+@pytest.mark.anyio
+async def test_mongo_thingy_enums():
+    connect(client_cls=AsyncMongoMockClient)
+
+    class Importance(str, Enum):
+        HIGH = 'high'
+        LOW = 'low'
+
+    class Something(AsyncThingy):
+        pass
+
+    something1 = Something(importance='high')
+    await something1.save()
+
+    assert await Something.count({'importance': Importance.HIGH})
