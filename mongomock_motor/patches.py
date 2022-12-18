@@ -1,3 +1,4 @@
+from beanie.odm.fields import ExpressionField
 from mongomock import DuplicateKeyError, helpers
 
 
@@ -62,7 +63,7 @@ def _normalize_strings(obj):
     if isinstance(obj, dict):
         return {_normalize_strings(k): _normalize_strings(v) for k, v in obj.items()}
 
-    if isinstance(obj, str):
+    if isinstance(obj, ExpressionField):  # make sure we won't fail while working with beanie
         return str(obj)
 
     return obj
