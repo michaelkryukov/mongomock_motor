@@ -1,5 +1,10 @@
-from beanie.odm.fields import ExpressionField
 from mongomock import DuplicateKeyError, helpers
+
+
+try:
+    from beanie.odm.fields import ExpressionField
+except ModuleNotFoundError:
+    ExpressionField = None
 
 
 def _provide_error_details(collection, data, exception):
@@ -63,7 +68,8 @@ def _normalize_strings(obj):
     if isinstance(obj, dict):
         return {_normalize_strings(k): _normalize_strings(v) for k, v in obj.items()}
 
-    if isinstance(obj, ExpressionField):  # make sure we won't fail while working with beanie
+    # make sure we won't fail while working with beanie
+    if ExpressionField and isinstance(obj, ExpressionField):
         return str(obj)
 
     return obj
