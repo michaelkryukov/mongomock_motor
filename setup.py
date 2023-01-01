@@ -28,7 +28,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/michaelkryukov/mongomock_motor",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(include=('mongomock_motor',)),
     install_requires=[
         "mongomock>=3.23.0,<5.0.0",
     ],
