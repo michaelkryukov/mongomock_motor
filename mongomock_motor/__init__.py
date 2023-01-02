@@ -116,6 +116,12 @@ class AsyncLatentCommandCursor():
         except StopIteration:
             raise StopAsyncIteration()
 
+    async def next(self):
+        try:
+            return next(self.__cursor)
+        except StopIteration:
+            raise StopAsyncIteration()
+
     async def to_list(self, *args, **kwargs):
         return list(self.__cursor)
 
