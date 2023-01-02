@@ -55,3 +55,56 @@ async def test_aggregate():
 
     docs = await collection.aggregate([{'$match': {'i': 0}}]).to_list()
     assert len(docs) == 1
+
+
+@pytest.mark.anyio
+async def test_next():
+    collection = AsyncMongoMockClient()['tests']['test']
+
+    # Insert sample documents into database
+    sample_docs = [{'i': i} for i in range(EXPECTED_DOCUMENTS_COUNT)]
+    await collection.insert_many(sample_docs)
+
+    # Create cursor with sorted docs
+    cursor = collection.find(sort=[('i', 1)])
+
+    # Query docs using "next" coroutine
+    docs = []
+    for _ in range(EXPECTED_DOCUMENTS_COUNT):
+        docs.append(await cursor.next())
+
+    # Check that cursor is exhausted
+    with pytest.raises(StopAsyncIteration):
+        await cursor.next()
+
+    # Check docs are correct
+    assert docs == sample_docs
+
+
+@pytest.mark.anyio
+async def test_async_for():
+    collection = AsyncMongoMockClient()['tests']['test']
+
+    # Insert sample documents into database
+    sample_docs = [{'i': i} for i in range(EXPECTED_DOCUMENTS_COUNT)]
+    await collection.insert_many(sample_docs)
+
+    # Create cursor with sorted docs
+    cursor = collection.aggregate([{'$sort': {'i': 1}}])
+
+    # Check that plain for-loop won't work
+    with pytest.raises(TypeError):
+        for _ in cursor:
+            pass
+
+    # Iterate over cursor with for-loop
+    docs = []
+    async for doc in cursor:
+        docs.append(doc)
+
+    # Check that cursor is exhausted
+    with pytest.raises(StopAsyncIteration):
+        await cursor.next()
+
+    # Check docs are correct
+    assert docs == sample_docs

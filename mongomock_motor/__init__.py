@@ -83,11 +83,13 @@ class AsyncCursor():
     def __aiter__(self):
         return self
 
-    async def __anext__(self):
+    async def next(self):
         try:
             return next(self.__cursor)
         except StopIteration:
             raise StopAsyncIteration()
+
+    __anext__ = next
 
     def clone(self):
         return AsyncCursor(self.__cursor.clone())
@@ -110,11 +112,13 @@ class AsyncLatentCommandCursor():
     def __aiter__(self):
         return self
 
-    async def __anext__(self):
+    async def next(self):
         try:
             return next(self.__cursor)
         except StopIteration:
             raise StopAsyncIteration()
+
+    __anext__ = next
 
     async def to_list(self, *args, **kwargs):
         return list(self.__cursor)
