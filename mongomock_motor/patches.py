@@ -61,6 +61,24 @@ def _patch_insert(collection):
     return collection
 
 
+def _patch_replace_one(collection):
+    """
+    Adds details with 'keyPattern' and 'keyValue' when
+    raising DuplicateKeyError from _replace
+    """
+    _replace_one = collection.replace_one
+
+    def replace_one(filter, replacement, *args, **kwargs):
+        try:
+            return _replace_one(filter, replacement, *args, **kwargs)
+        except DuplicateKeyError as exc:
+            raise _provide_error_details(collection, replacement, exc)
+
+    collection.replace_one = replace_one
+
+    return collection
+
+
 def _normalize_strings(obj):
     if isinstance(obj, list):
         return [_normalize_strings(v) for v in obj]
@@ -93,6 +111,7 @@ def _patch_iter_documents(collection):
 
 def _patch_collection_internals(collection):
     collection = _patch_insert(collection)
+    collection = _patch_replace_one(collection)
     collection = _patch_iter_documents(collection)
     return collection
 
