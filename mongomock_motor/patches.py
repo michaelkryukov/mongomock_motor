@@ -1,5 +1,5 @@
 from mongomock import DuplicateKeyError, helpers
-
+from functools import wraps
 
 try:
     from beanie.odm.fields import ExpressionField
@@ -42,21 +42,24 @@ def _provide_error_details(collection, data, exception):
     return exception
 
 
-def _patch_insert(collection):
+def _patch_insert_and_ensure_uniques(collection):
     """
     Adds details with 'keyPattern' and 'keyValue' when
-    raising DuplicateKeyError from _insert
+    raising DuplicateKeyError from _insert or _ensure_uniques
     https://github.com/mongomock/mongomock/issues/773
     """
-    _insert = collection._insert
 
-    def insert(data, *args, **kwargs):
-        try:
-            return _insert(data, *args, **kwargs)
-        except DuplicateKeyError as exc:
-            raise _provide_error_details(collection, data, exc)
+    def with_enriched_duplicate_key_error(fn):
+        @wraps(fn)
+        def wrapper(data, *args, **kwargs):
+            try:
+                return fn(data, *args, **kwargs)
+            except DuplicateKeyError as exc:
+                raise _provide_error_details(collection, data, exc)
+        return wrapper
 
-    collection._insert = insert
+    collection._insert = with_enriched_duplicate_key_error(collection._insert)
+    collection._ensure_uniques = with_enriched_duplicate_key_error(collection._ensure_uniques)
 
     return collection
 
@@ -92,7 +95,7 @@ def _patch_iter_documents(collection):
 
 
 def _patch_collection_internals(collection):
-    collection = _patch_insert(collection)
+    collection = _patch_insert_and_ensure_uniques(collection)
     collection = _patch_iter_documents(collection)
     return collection
 
