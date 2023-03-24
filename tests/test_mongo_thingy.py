@@ -20,6 +20,7 @@ async def test_mongo_thingy():
     something1 = Something(field1='A', field2=':)', related=[])
     await something1.save()
 
+    # DuplicateKeyError should be raised when inserting
     with pytest.raises(
         DuplicateKeyError,
         match="^E11000 Duplicate Key Error, full error: {'keyValue': {'field1': 'A'}, 'keyPattern': {'field1': 1}}$",
@@ -29,6 +30,14 @@ async def test_mongo_thingy():
 
     something2 = Something(field1='B', field2=';)', related=[something1.id])
     await something2.save()
+
+    # DuplicateKeyError should be raised when updating
+    with pytest.raises(
+        DuplicateKeyError,
+        match="^E11000 Duplicate Key Error, full error: {'keyValue': {'field1': 'A'}, 'keyPattern': {'field1': 1}}$",
+    ):
+        something2.field1 = 'A'
+        await something2.save()
 
     found = await Something.find_one({'field1': 'B'})
     assert found
