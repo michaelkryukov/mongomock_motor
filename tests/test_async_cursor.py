@@ -108,3 +108,22 @@ async def test_async_for():
 
     # Check docs are correct
     assert docs == sample_docs
+
+
+@pytest.mark.anyio
+async def test_list_indexes():
+    collection = AsyncMongoMockClient()['tests']['test']
+
+    # Insert sample documents into database
+    await collection.insert_many([{'i': i} for i in range(EXPECTED_DOCUMENTS_COUNT)])
+
+    # Check that there is one default '_id' index
+    indexes = await collection.list_indexes().to_list()
+    assert len(indexes) == 1
+
+    # Create a second index on the field 'i'
+    await collection.create_index([('i', pymongo.DESCENDING)])
+
+    # Check that there are now two indexes
+    indexes = await collection.list_indexes().to_list()
+    assert len(indexes) == 2
