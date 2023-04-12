@@ -174,6 +174,9 @@ class AsyncMongoMockCollection():
     def aggregate(self, *args, **kwargs) -> AsyncLatentCommandCursor:
         return AsyncLatentCommandCursor(self.__collection.aggregate(*args, **kwargs))
 
+    def list_indexes(self, *args, **kwargs) -> AsyncCursor:
+        return AsyncCursor(self.__collection.list_indexes(*args, **kwargs))
+
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorDatabase')
 @with_async_methods('__database', [
