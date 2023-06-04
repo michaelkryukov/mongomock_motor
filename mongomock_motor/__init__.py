@@ -232,8 +232,8 @@ class AsyncMongoMockDatabase():
     'server_info',
 ])
 class AsyncMongoMockClient():
-    def __init__(self, *args, mock_build_info=None, **kwargs):
-        self.__client = MongoClient(*args, **kwargs)
+    def __init__(self, *args, mock_build_info=None, mock_mongo_client=None, **kwargs):
+        self.__client = mock_mongo_client or MongoClient(*args, **kwargs)
         self.__build_info = mock_build_info
 
     def get_database(self, *args, **kwargs):
