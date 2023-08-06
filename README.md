@@ -1,6 +1,7 @@
 # mongomock-motor
 
 [![PyPI version](https://badge.fury.io/py/mongomock-motor.svg)](https://badge.fury.io/py/mongomock-motor)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmichaelkryukov%2Fmongomock_motor.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmichaelkryukov%2Fmongomock_motor?ref=badge_shield)
 
 Best effort mock for [AsyncIOMotorClient](https://motor.readthedocs.io/en/stable/api-asyncio/asyncio_motor_client.html)
 (Database, Collection, e.t.c) built on top of [mongomock](https://github.com/mongomock/mongomock) library.
@@ -21,3 +22,7 @@ async def test_mock_client():
 
     assert len(await collection.find({}).to_list(None)) == 1
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmichaelkryukov%2Fmongomock_motor.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmichaelkryukov%2Fmongomock_motor?ref=badge_large)
