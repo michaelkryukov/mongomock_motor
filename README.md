@@ -23,6 +23,6 @@ async def test_mock_client():
     assert len(await collection.find({}).to_list(None)) == 1
 ```
 
-
 ## License
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmichaelkryukov%2Fmongomock_motor.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmichaelkryukov%2Fmongomock_motor?ref=badge_large)
