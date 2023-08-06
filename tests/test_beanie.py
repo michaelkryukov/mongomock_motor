@@ -44,8 +44,8 @@ async def test_beanie():
 
 
 class Door(Document):
-    height: int = 2
-    width: int = 1
+    height: float = 2
+    width: float = 1
 
 
 class House(Document):
@@ -66,4 +66,4 @@ async def test_beanie_links():
     assert len(houses) == 1
     house = houses[0]
     await house.fetch_all_links()
-    assert house.door.height == 2
+    assert house.door.height == 2.1
