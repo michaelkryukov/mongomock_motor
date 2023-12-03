@@ -1,6 +1,8 @@
-from functools import wraps
 import importlib
+from functools import wraps
+
 from mongomock import MongoClient
+
 from .patches import _patch_collection_internals
 
 
@@ -211,7 +213,11 @@ class AsyncMongoMockDatabase():
         try:
             return getattr(self.__database, 'command')(*args, **kwargs)
         except NotImplementedError:
-            if not kwargs and len(args) == 1 and list(args)[0].lower() == 'buildinfo':
+            if not args:
+                raise
+            if isinstance(args[0], str) and args[0].lower() == 'buildinfo':
+                return self.__build_info
+            if isinstance(args[0], dict) and args[0] and list(args[0])[0].lower() == 'buildinfo':
                 return self.__build_info
             raise
 
