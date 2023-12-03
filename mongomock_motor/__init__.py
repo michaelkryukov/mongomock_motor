@@ -190,7 +190,11 @@ class AsyncMongoMockDatabase():
     def __init__(self, client, database, mock_build_info=None):
         self.client = client
         self.__database = database
-        self.__build_info = mock_build_info or {'ok': 1.0, 'version': '5.0.5'}
+        self.__build_info = mock_build_info or {
+            'ok': 1.0,
+            'version': '5.0.5',
+            'versionArray': [5, 0, 5],
+        }
 
     def get_collection(self, *args, **kwargs):
         return AsyncMongoMockCollection(
@@ -207,7 +211,7 @@ class AsyncMongoMockDatabase():
         try:
             return getattr(self.__database, 'command')(*args, **kwargs)
         except NotImplementedError:
-            if args == ({'buildInfo': 1},) and not kwargs:
+            if not kwargs and len(args) == 1 and list(args)[0].lower() == 'buildinfo':
                 return self.__build_info
             raise
 
