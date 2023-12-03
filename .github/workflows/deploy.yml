@@ -10,7 +10,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.11"]
 
     steps:
       - uses: actions/checkout@v1
@@ -24,7 +24,7 @@ jobs:
           python3 -m pip install -r requirements.txt
       - name: Install module
         run: |
-          python3 setup.py install
+          python3 -m pip install .
       - name: Test with coverage and pytest
         run: |
           python3 -m pytest tests/
@@ -33,7 +33,7 @@ jobs:
           python3 -m build
       - name: Upload the distribution archives
         run: |
-          python3 -m twine upload dist/*
+          python3 -m twine upload --verbose dist/*
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
