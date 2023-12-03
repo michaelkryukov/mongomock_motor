@@ -20,7 +20,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python3 -m pip install --upgrade pip setuptools wheel twine
+          python3 -m pip install --upgrade pip build wheel twine
           python3 -m pip install -r requirements.txt
       - name: Install module
         run: |
@@ -30,7 +30,7 @@ jobs:
           python3 -m pytest tests/
       - name: Generate distribution archives
         run: |
-          python3 setup.py sdist bdist_wheel
+          python3 -m build
       - name: Upload the distribution archives
         run: |
           python3 -m twine upload dist/*
