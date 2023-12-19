@@ -58,10 +58,13 @@ def _patch_insert_and_ensure_uniques(collection):
                 return fn(data, *args, **kwargs)
             except DuplicateKeyError as exc:
                 raise _provide_error_details(collection, data, exc)
+
         return wrapper
 
     collection._insert = with_enriched_duplicate_key_error(collection._insert)
-    collection._ensure_uniques = with_enriched_duplicate_key_error(collection._ensure_uniques)
+    collection._ensure_uniques = with_enriched_duplicate_key_error(
+        collection._ensure_uniques
+    )
 
     return collection
 

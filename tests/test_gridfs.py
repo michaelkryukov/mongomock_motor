@@ -1,7 +1,9 @@
-import pytest
-from mongomock_motor import AsyncMongoMockClient, enabled_gridfs_integration
-from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 import io
+
+import pytest
+from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+
+from mongomock_motor import AsyncMongoMockClient, enabled_gridfs_integration
 
 
 @pytest.mark.anyio

@@ -27,17 +27,21 @@ def masquerade_class(name):
             @property
             def __class__(self):
                 return target
+
         return Wrapper
+
     return decorator
 
 
 def with_async_methods(source, async_methods):
     def decorator(cls):
         for method_name in async_methods:
+
             def make_wrapper(method_name):
                 async def wrapper(self, *args, **kwargs):
                     proxy_source = self.__dict__.get(f'_{cls.__name__}{source}')
                     return getattr(proxy_source, method_name)(*args, **kwargs)
+
                 return wrapper
 
             setattr(cls, method_name, make_wrapper(method_name))
@@ -50,11 +54,13 @@ def with_async_methods(source, async_methods):
 def with_cursor_chaining_methods(source, chaining_methods):
     def decorator(cls):
         for method_name in chaining_methods:
+
             def make_wrapper(method_name):
                 def wrapper(self, *args, **kwargs):
                     proxy_source = self.__dict__.get(f'_{cls.__name__}{source}')
                     getattr(proxy_source, method_name)(*args, **kwargs)
                     return self
+
                 return wrapper
 
             setattr(cls, method_name, make_wrapper(method_name))
@@ -65,24 +71,27 @@ def with_cursor_chaining_methods(source, chaining_methods):
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCursor')
-@with_cursor_chaining_methods('__cursor', [
-    'add_option',
-    'allow_disk_use',
-    'collation',
-    'comment',
-    'hint',
-    'limit',
-    'max_await_time_ms',
-    'max_scan',
-    'max_time_ms',
-    'max',
-    'min',
-    'remove_option',
-    'skip',
-    'sort',
-    'where',
-])
-class AsyncCursor():
+@with_cursor_chaining_methods(
+    '__cursor',
+    [
+        'add_option',
+        'allow_disk_use',
+        'collation',
+        'comment',
+        'hint',
+        'limit',
+        'max_await_time_ms',
+        'max_scan',
+        'max_time_ms',
+        'max',
+        'min',
+        'remove_option',
+        'skip',
+        'sort',
+        'where',
+    ],
+)
+class AsyncCursor:
     def __init__(self, cursor):
         self.__cursor = cursor
 
@@ -111,7 +120,7 @@ class AsyncCursor():
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorLatentCommandCursor')
-class AsyncLatentCommandCursor():
+class AsyncLatentCommandCursor:
     def __init__(self, cursor):
         self.__cursor = cursor
 
@@ -134,39 +143,42 @@ class AsyncLatentCommandCursor():
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCollection')
-@with_async_methods('__collection', [
-    'bulk_write',
-    'count_documents',
-    'count',  # deprecated
-    'create_index',
-    'create_indexes',
-    'delete_many',
-    'delete_one',
-    'drop_index',
-    'drop_indexes',
-    'drop',
-    'distinct',
-    'ensure_index',
-    'estimated_document_count',
-    'find_and_modify',  # deprecated
-    'find_one_and_delete',
-    'find_one_and_replace',
-    'find_one_and_update',
-    'find_one',
-    'index_information',
-    'inline_map_reduce',
-    'insert_many',
-    'insert_one',
-    'map_reduce',
-    'options',
-    'reindex',
-    'rename',
-    'replace_one',
-    'save',
-    'update_many',
-    'update_one',
-])
-class AsyncMongoMockCollection():
+@with_async_methods(
+    '__collection',
+    [
+        'bulk_write',
+        'count_documents',
+        'count',  # deprecated
+        'create_index',
+        'create_indexes',
+        'delete_many',
+        'delete_one',
+        'drop_index',
+        'drop_indexes',
+        'drop',
+        'distinct',
+        'ensure_index',
+        'estimated_document_count',
+        'find_and_modify',  # deprecated
+        'find_one_and_delete',
+        'find_one_and_replace',
+        'find_one_and_update',
+        'find_one',
+        'index_information',
+        'inline_map_reduce',
+        'insert_many',
+        'insert_one',
+        'map_reduce',
+        'options',
+        'reindex',
+        'rename',
+        'replace_one',
+        'save',
+        'update_many',
+        'update_one',
+    ],
+)
+class AsyncMongoMockCollection:
     def __init__(self, database, collection):
         self.database = database
         self.__collection = collection
@@ -191,14 +203,17 @@ class AsyncMongoMockCollection():
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorDatabase')
-@with_async_methods('__database', [
-    'create_collection',
-    'dereference',
-    'drop_collection',
-    'list_collection_names',
-    'validate_collection',
-])
-class AsyncMongoMockDatabase():
+@with_async_methods(
+    '__database',
+    [
+        'create_collection',
+        'dereference',
+        'drop_collection',
+        'list_collection_names',
+        'validate_collection',
+    ],
+)
+class AsyncMongoMockDatabase:
     def __init__(self, client, database, mock_build_info=None):
         self.client = client
         self.__database = database
@@ -234,7 +249,11 @@ class AsyncMongoMockDatabase():
                 raise
             if isinstance(args[0], str) and args[0].lower() == 'buildinfo':
                 return self.__build_info
-            if isinstance(args[0], dict) and args[0] and list(args[0])[0].lower() == 'buildinfo':
+            if (
+                isinstance(args[0], dict)
+                and args[0]
+                and list(args[0])[0].lower() == 'buildinfo'
+            ):
                 return self.__build_info
             raise
 
@@ -252,15 +271,27 @@ class AsyncMongoMockDatabase():
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorClient')
-@with_async_methods('__client', [
-    'drop_database',
-    'list_database_names',
-    'list_databases',
-    'server_info',
-])
-class AsyncMongoMockClient():
-    def __init__(self, *args, mock_build_info=None, mock_mongo_client=None, mock_io_loop=None, **kwargs):
-        self.__client = _patch_client_internals(mock_mongo_client or MongoClient(*args, **kwargs))
+@with_async_methods(
+    '__client',
+    [
+        'drop_database',
+        'list_database_names',
+        'list_databases',
+        'server_info',
+    ],
+)
+class AsyncMongoMockClient:
+    def __init__(
+        self,
+        *args,
+        mock_build_info=None,
+        mock_mongo_client=None,
+        mock_io_loop=None,
+        **kwargs,
+    ):
+        self.__client = _patch_client_internals(
+            mock_mongo_client or MongoClient(*args, **kwargs)
+        )
         self.__build_info = mock_build_info
         self.__io_loop = mock_io_loop
 
@@ -290,7 +321,11 @@ class AsyncMongoMockClient():
 @contextmanager
 def enabled_gridfs_integration():
     with ExitStack() as stack:
-        stack.enter_context(patch('gridfs.Database', (PyMongoDatabase, MongoMockDatabase)))
-        stack.enter_context(patch('gridfs.grid_file.Collection', (PyMongoDatabase, MongoMockCollection)))
+        stack.enter_context(
+            patch('gridfs.Database', (PyMongoDatabase, MongoMockDatabase))
+        )
+        stack.enter_context(
+            patch('gridfs.grid_file.Collection', (PyMongoDatabase, MongoMockCollection))
+        )
         stack.enter_context(patch('gridfs.GridOutCursor', _create_grid_out_cursor))
         yield
