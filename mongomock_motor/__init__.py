@@ -1,9 +1,16 @@
+import asyncio
 import importlib
+from contextlib import ExitStack, contextmanager
 from functools import wraps
+from unittest.mock import patch
 
+from mongomock import Collection as MongoMockCollection
+from mongomock import Database as MongoMockDatabase
 from mongomock import MongoClient
+from mongomock.gridfs import _create_grid_out_cursor
+from pymongo.database import Database as PyMongoDatabase
 
-from .patches import _patch_collection_internals
+from .patches import _patch_client_internals, _patch_collection_internals
 
 
 def masquerade_class(name):
@@ -164,6 +171,9 @@ class AsyncMongoMockCollection():
         self.database = database
         self.__collection = collection
 
+    def get_io_loop(self):
+        return self.database.get_io_loop()
+
     def __eq__(self, other):
         return self.__collection == other.__collection
 
@@ -197,6 +207,13 @@ class AsyncMongoMockDatabase():
             'version': '5.0.5',
             'versionArray': [5, 0, 5],
         }
+
+    @property
+    def delegate(self):
+        return self.__database
+
+    def get_io_loop(self):
+        return self.client.get_io_loop()
 
     def get_collection(self, *args, **kwargs):
         return AsyncMongoMockCollection(
@@ -242,9 +259,13 @@ class AsyncMongoMockDatabase():
     'server_info',
 ])
 class AsyncMongoMockClient():
-    def __init__(self, *args, mock_build_info=None, mock_mongo_client=None, **kwargs):
-        self.__client = mock_mongo_client or MongoClient(*args, **kwargs)
+    def __init__(self, *args, mock_build_info=None, mock_mongo_client=None, mock_io_loop=None, **kwargs):
+        self.__client = _patch_client_internals(mock_mongo_client or MongoClient(*args, **kwargs))
         self.__build_info = mock_build_info
+        self.__io_loop = mock_io_loop
+
+    def get_io_loop(self):
+        return self.__io_loop or asyncio.get_event_loop()
 
     def get_database(self, *args, **kwargs):
         return AsyncMongoMockDatabase(
@@ -264,3 +285,12 @@ class AsyncMongoMockClient():
             return getattr(self.__client, name)
 
         return self.get_database(name)
+
+
+@contextmanager
+def enabled_gridfs_integration():
+    with ExitStack() as stack:
+        stack.enter_context(patch('gridfs.Database', (PyMongoDatabase, MongoMockDatabase)))
+        stack.enter_context(patch('gridfs.grid_file.Collection', (PyMongoDatabase, MongoMockCollection)))
+        stack.enter_context(patch('gridfs.GridOutCursor', _create_grid_out_cursor))
+        yield
