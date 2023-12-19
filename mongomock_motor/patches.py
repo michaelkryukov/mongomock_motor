@@ -1,5 +1,7 @@
-from mongomock import DuplicateKeyError, helpers
 from functools import wraps
+from unittest.mock import Mock
+
+from mongomock import DuplicateKeyError, helpers
 
 try:
     from beanie.odm.fields import ExpressionField
@@ -100,4 +102,9 @@ def _patch_collection_internals(collection):
     return collection
 
 
-__all__ = ['_patch_collection_internals']
+def _patch_client_internals(client):
+    client.options = Mock(timeout=None)
+    return client
+
+
+__all__ = ['_patch_collection_internals', '_patch_client_internals']
