@@ -192,6 +192,9 @@ class AsyncMongoMockCollection:
     def __getattr__(self, name):
         return getattr(self.__collection, name)
 
+    def __hash__(self):
+        return hash(self.__collection)
+
     def find(self, *args, **kwargs) -> AsyncCursor:
         return AsyncCursor(self.__collection.find(*args, **kwargs))
 
@@ -269,6 +272,9 @@ class AsyncMongoMockDatabase:
 
         return self.get_collection(name)
 
+    def __hash__(self):
+        return hash(self.__database)
+
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorClient')
 @with_async_methods(
@@ -316,6 +322,9 @@ class AsyncMongoMockClient:
             return getattr(self.__client, name)
 
         return self.get_database(name)
+
+    def __hash__(self):
+        return hash(self.__client)
 
 
 @contextmanager
