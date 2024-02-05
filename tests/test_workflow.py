@@ -1,7 +1,9 @@
+from datetime import datetime, timezone
+
 import bson
 import pytest
-from datetime import datetime, timezone
 from pymongo import ReplaceOne
+
 from mongomock_motor import AsyncMongoMockClient
 
 
@@ -56,11 +58,7 @@ async def test_tz_awareness():
 @pytest.mark.anyio
 async def test_bulk_write():
     collection = AsyncMongoMockClient()['tests']['test']
-    result = await collection.bulk_write([
-        ReplaceOne(
-            filter={'_id': 1},
-            replacement={'_id': 1},
-            upsert=True
-        )
-    ])
+    result = await collection.bulk_write(
+        [ReplaceOne(filter={'_id': 1}, replacement={'_id': 1}, upsert=True)]
+    )
     assert result.bulk_api_result['nUpserted'] == 1

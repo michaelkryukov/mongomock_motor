@@ -26,7 +26,9 @@ async def test_umongo():
     something1 = Something(field1='A', field2=':)', related=[])
     await something1.commit()
 
-    with pytest.raises(ValidationError, match="^{'field1': 'Field value must be unique.'}$"):
+    with pytest.raises(
+        ValidationError, match="^{'field1': 'Field value must be unique.'}$"
+    ):
         duplicate = Something(field1='A', field2=':)', related=[])
         await duplicate.commit()
 

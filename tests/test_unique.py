@@ -1,5 +1,6 @@
 import pytest
 from pymongo.errors import DuplicateKeyError
+
 from mongomock_motor import AsyncMongoMockClient
 
 

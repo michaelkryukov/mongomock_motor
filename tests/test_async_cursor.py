@@ -1,7 +1,7 @@
 import pymongo
 import pytest
-from mongomock_motor import AsyncMongoMockClient
 
+from mongomock_motor import AsyncMongoMockClient
 
 EXPECTED_DOCUMENTS_COUNT = 10
 
@@ -31,8 +31,7 @@ async def test_skip_and_limit():
 
     # Query with limit, skip and sort
     docs = await (
-        collection
-        .find(projection={'_id': 0})
+        collection.find(projection={'_id': 0})
         .skip(2)
         .limit(2)
         .sort('i', pymongo.DESCENDING)

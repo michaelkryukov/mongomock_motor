@@ -1,5 +1,6 @@
-from pymongo import ReadPreference
 import pytest
+from pymongo import ReadPreference
+
 from mongomock_motor import AsyncMongoMockClient
 
 
@@ -10,7 +11,9 @@ async def test_attrs():
     collection = database.get_collection('test')
     await collection.insert_one({'a': 1})
 
-    assert await client['tests']['test'].find_one(projection={'_id': 0, 'a': 1}) == {'a': 1}
+    assert await client['tests']['test'].find_one(projection={'_id': 0, 'a': 1}) == {
+        'a': 1
+    }
     assert await client.tests.test.find_one(projection={'_id': 0, 'a': 1}) == {'a': 1}
     assert await collection.find_one(projection={'_id': 0, 'a': 1}) == {'a': 1}
 

@@ -1,10 +1,14 @@
 .PHONY: all
 
-all: lint test
+all: check test
 
-lint:
-	flake8 mongomock_motor/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-	flake8 mongomock_motor/ tests/ --count --max-complexity=10 --max-line-length=127 --statistics
+check:
+	python3 -m ruff check mongomock_motor/ tests/ && \
+	python3 -m ruff format --check mongomock_motor/ tests/
+
+format:
+	python3 -m ruff check --fix mongomock_motor/ tests/ && \
+	python3 -m ruff format mongomock_motor/ tests/
 
 test:
 	ENVIRONMENT=test python3 -m pytest tests/
