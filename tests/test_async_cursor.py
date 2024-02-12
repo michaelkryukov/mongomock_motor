@@ -79,6 +79,7 @@ async def test_next():
     # Check docs are correct
     assert docs == sample_docs
 
+    await cursor.close()
 
 @pytest.mark.anyio
 async def test_async_for():
@@ -108,6 +109,7 @@ async def test_async_for():
     # Check docs are correct
     assert docs == sample_docs
 
+    await cursor.close()
 
 @pytest.mark.anyio
 async def test_list_indexes():

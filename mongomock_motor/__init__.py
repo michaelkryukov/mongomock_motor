@@ -118,6 +118,9 @@ class AsyncCursor:
     async def to_list(self, *args, **kwargs):
         return list(self.__cursor)
 
+    async def close(self):
+        pass
+
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorLatentCommandCursor')
 class AsyncLatentCommandCursor:
@@ -140,6 +143,9 @@ class AsyncLatentCommandCursor:
 
     async def to_list(self, *args, **kwargs):
         return list(self.__cursor)
+
+    async def close(self):
+        pass
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorCollection')
