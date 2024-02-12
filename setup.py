@@ -9,9 +9,11 @@ import os
 import setuptools
 
 
-assert os.environ.get('GITHUB_REF_TYPE') == 'tag'
-assert os.environ.get('GITHUB_REF_NAME')
-VERSION = os.environ['GITHUB_REF_NAME'].lstrip('v')
+if os.environ.get('GITHUB_REF_TYPE') == 'tag':
+    assert os.environ.get('GITHUB_REF_NAME')
+    VERSION = os.environ['GITHUB_REF_NAME'].lstrip('v')
+else:
+    VERSION = "0.0.0-dev"
 
 
 with open("README.md", "r") as fh:
