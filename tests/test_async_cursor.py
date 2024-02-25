@@ -7,6 +7,23 @@ EXPECTED_DOCUMENTS_COUNT = 10
 
 
 @pytest.mark.anyio
+async def test_closeable():
+    collection = AsyncMongoMockClient()['tests']['test']
+
+    # Insert sample documents into database
+    await collection.insert_many([{'i': i} for i in range(EXPECTED_DOCUMENTS_COUNT)])
+
+    # Create cursor
+    cursor = collection.find()
+
+    # Close cursor
+    await cursor.close()
+
+    # Closing of already closed cursor don't trigger errors
+    await cursor.close()
+
+
+@pytest.mark.anyio
 async def test_skip_and_limit():
     collection = AsyncMongoMockClient()['tests']['test']
 
