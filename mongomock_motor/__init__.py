@@ -91,6 +91,12 @@ def with_cursor_chaining_methods(source, chaining_methods):
         'where',
     ],
 )
+@with_async_methods(
+    '__cursor',
+    [
+        'close',
+    ],
+)
 class AsyncCursor:
     def __init__(self, cursor):
         self.__cursor = cursor
@@ -176,6 +182,12 @@ class AsyncLatentCommandCursor:
         'save',
         'update_many',
         'update_one',
+    ],
+)
+@with_async_methods(
+    '__cursor',
+    [
+        'close',
     ],
 )
 class AsyncMongoMockCollection:
