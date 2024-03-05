@@ -191,9 +191,15 @@ class AsyncLatentCommandCursor:
     ],
 )
 class AsyncMongoMockCollection:
+    __patched = False
+
     def __init__(self, database, collection):
         self.database = database
-        self.__collection = collection
+        if self.__patched:
+            self.__collection = collection
+        else:
+            self.__collection = _patch_collection_internals(collection)
+            AsyncMongoMockCollection.__patched = True
 
     def get_io_loop(self):
         return self.database.get_io_loop()
@@ -248,9 +254,7 @@ class AsyncMongoMockDatabase:
     def get_collection(self, *args, **kwargs):
         return AsyncMongoMockCollection(
             self,
-            _patch_collection_internals(
-                self.__database.get_collection(*args, **kwargs),
-            ),
+            self.__database.get_collection(*args, **kwargs),
         )
 
     def aggregate(self, *args, **kwargs) -> AsyncCursor:
