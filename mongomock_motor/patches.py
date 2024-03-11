@@ -61,9 +61,11 @@ def _patch_insert_and_ensure_uniques(collection):
 
         return wrapper
 
-    collection._insert = with_enriched_duplicate_key_error(collection._insert)
+    collection._insert = with_enriched_duplicate_key_error(
+        collection._insert,
+    )
     collection._ensure_uniques = with_enriched_duplicate_key_error(
-        collection._ensure_uniques
+        collection._ensure_uniques,
     )
 
     return collection
@@ -89,19 +91,27 @@ def _patch_iter_documents(collection):
     that is inherited from "str". Looks like pymongo works ok
     with that, so we should be too.
     """
-    _iter_documents = collection._iter_documents
 
-    def iter_documents(filter):
-        return _iter_documents(_normalize_strings(filter))
+    def with_normalized_strings_in_filter(fn):
+        @wraps(fn)
+        def wrapper(filter):
+            return fn(_normalize_strings(filter))
 
-    collection._iter_documents = iter_documents
+        return wrapper
+
+    collection._iter_documents = with_normalized_strings_in_filter(
+        collection._iter_documents,
+    )
 
     return collection
 
 
 def _patch_collection_internals(collection):
+    if getattr(collection, '_patched_by_mongomock_motor', False):
+        return collection
     collection = _patch_insert_and_ensure_uniques(collection)
     collection = _patch_iter_documents(collection)
+    collection._patched_by_mongomock_motor = True
     return collection
 
 
