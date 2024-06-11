@@ -22,6 +22,15 @@ async def test_closeable():
     # Closing of already closed cursor don't trigger errors
     await cursor.close()
 
+    # Create command cursor
+    command_cursor = collection.aggregate([])
+
+    # Close cursor
+    await command_cursor.close()
+
+    # Closing of already closed cursor don't trigger errors
+    await command_cursor.close()
+
 
 @pytest.mark.anyio
 async def test_skip_and_limit():

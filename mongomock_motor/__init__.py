@@ -126,6 +126,12 @@ class AsyncCursor:
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorLatentCommandCursor')
+@with_async_methods(
+    '__cursor',
+    [
+        'close',
+    ],
+)
 class AsyncLatentCommandCursor:
     def __init__(self, cursor):
         self.__cursor = cursor
@@ -182,12 +188,6 @@ class AsyncLatentCommandCursor:
         'save',
         'update_many',
         'update_one',
-    ],
-)
-@with_async_methods(
-    '__cursor',
-    [
-        'close',
     ],
 )
 class AsyncMongoMockCollection:
