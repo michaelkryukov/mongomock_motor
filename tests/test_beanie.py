@@ -75,3 +75,14 @@ async def test_beanie_links():
     house = houses[0]
     await house.fetch_all_links()
     assert house.door.height == 2.1
+
+
+@pytest.mark.anyio
+async def test_beanie_sort():
+    client = AsyncMongoMockClient()
+    await init_beanie(database=client.beanie_test, document_models=[Door])
+
+    await Door.insert_many([Door(width=width) for width in [4, 2, 3, 1]])
+
+    doors = await Door.find().sort(Door.width).to_list()
+    assert [door.width for door in doors] == [1, 2, 3, 4]

@@ -75,6 +75,9 @@ def _normalize_strings(obj):
     if isinstance(obj, list):
         return [_normalize_strings(v) for v in obj]
 
+    if isinstance(obj, tuple):
+        return tuple(_normalize_strings(v) for v in obj)
+
     if isinstance(obj, dict):
         return {_normalize_strings(k): _normalize_strings(v) for k, v in obj.items()}
 
@@ -85,7 +88,41 @@ def _normalize_strings(obj):
     return obj
 
 
-def _patch_iter_documents(collection):
+def _patch_iter_documents_and_get_dataset(collection):
+    """
+    When using beanie or other solutions that utilize classes inheriting from
+    the "str" type, we need to explicitly transform these instances to plain
+    strings in cases where internal workings of "mongomock" unable to handle
+    custom string-like classes. Currently only beanie's "ExpressionField" is
+    transformed to plain strings.
+    """
+
+    def _iter_documents_with_normalized_strings(fn):
+        @wraps(fn)
+        def wrapper(filter):
+            return fn(_normalize_strings(filter))
+
+        return wrapper
+
+    collection._iter_documents = _iter_documents_with_normalized_strings(
+        collection._iter_documents,
+    )
+
+    def _get_dataset_with_normalized_strings(fn):
+        @wraps(fn)
+        def wrapper(spec, sort, fields, as_class):
+            return fn(spec, _normalize_strings(sort), fields, as_class)
+
+        return wrapper
+
+    collection._get_dataset = _get_dataset_with_normalized_strings(
+        collection._get_dataset,
+    )
+
+    return collection
+
+
+def _patch_get_dataset(collection):
     """
     When using beanie, keys can have "ExpressionField" type,
     that is inherited from "str". Looks like pymongo works ok
@@ -94,13 +131,14 @@ def _patch_iter_documents(collection):
 
     def with_normalized_strings_in_filter(fn):
         @wraps(fn)
-        def wrapper(filter):
-            return fn(_normalize_strings(filter))
+        def wrapper(spec, sort, fields, as_class):
+            print(sort)
+            return fn(spec, _normalize_strings(sort), fields, as_class)
 
         return wrapper
 
-    collection._iter_documents = with_normalized_strings_in_filter(
-        collection._iter_documents,
+    collection._get_dataset = with_normalized_strings_in_filter(
+        collection._get_dataset,
     )
 
     return collection
@@ -110,7 +148,7 @@ def _patch_collection_internals(collection):
     if getattr(collection, '_patched_by_mongomock_motor', False):
         return collection
     collection = _patch_insert_and_ensure_uniques(collection)
-    collection = _patch_iter_documents(collection)
+    collection = _patch_iter_documents_and_get_dataset(collection)
     collection._patched_by_mongomock_motor = True
     return collection
 
