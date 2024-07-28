@@ -6,7 +6,7 @@ from pymongo.read_preferences import Primary
 from pymongo.results import UpdateResult
 
 from mongomock_motor import AsyncMongoMockClient
-from mongomock_motor.patches import _patch_iter_documents
+from mongomock_motor.patches import _patch_iter_documents_and_get_dataset
 
 
 @pytest.mark.anyio
@@ -56,8 +56,8 @@ async def test_no_multiple_patching():
     database = AsyncMongoMockClient()['test']
 
     with patch(
-        'mongomock_motor.patches._patch_iter_documents',
-        wraps=_patch_iter_documents,
+        'mongomock_motor.patches._patch_iter_documents_and_get_dataset',
+        wraps=_patch_iter_documents_and_get_dataset,
     ) as patch_iter_documents:
         for _ in range(2):
             collection = database['test']
