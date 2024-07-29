@@ -122,28 +122,6 @@ def _patch_iter_documents_and_get_dataset(collection):
     return collection
 
 
-def _patch_get_dataset(collection):
-    """
-    When using beanie, keys can have "ExpressionField" type,
-    that is inherited from "str". Looks like pymongo works ok
-    with that, so we should be too.
-    """
-
-    def with_normalized_strings_in_filter(fn):
-        @wraps(fn)
-        def wrapper(spec, sort, fields, as_class):
-            print(sort)
-            return fn(spec, _normalize_strings(sort), fields, as_class)
-
-        return wrapper
-
-    collection._get_dataset = with_normalized_strings_in_filter(
-        collection._get_dataset,
-    )
-
-    return collection
-
-
 def _patch_collection_internals(collection):
     if getattr(collection, '_patched_by_mongomock_motor', False):
         return collection
