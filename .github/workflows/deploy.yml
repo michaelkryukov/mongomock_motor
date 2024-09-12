@@ -25,4 +25,7 @@ jobs:
       - name: Test with coverage and pytest
         run: make test
       - name: Build and publish package
-        run: poetry publish --build --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
+        run: poetry version ${GITHUB_REF_NAME#v} && poetry publish --build
+        env:
+          POETRY_HTTP_BASIC_PYPI_USERNAME: __token__
+          POETRY_HTTP_BASIC_PYPI_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}

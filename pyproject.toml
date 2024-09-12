@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mongomock-motor"
-version = "0.1.0"
+version = "0.0.0"
 description = "Best effort mock for AsyncIOMotorClient built on top of mongomock library."
 authors = ["Michael Kryukov <mkrukov@bestplace.pro>"]
 readme = "README.md"
