@@ -16,9 +16,6 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
         python-version: ["3.8", "3.10", "3.12"]
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -26,7 +23,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Poetry
-        uses: snok/install-poetry@v1
+        uses: abatilo/actions-poetry@v2
       - name: Install dependencies
         run: poetry install --no-interaction
       - name: Lint with ruff and test with pytest
