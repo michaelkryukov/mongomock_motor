@@ -1,9 +1,0 @@
-mongomock~=4.1.2
-
-# Development requirements
-anyio~=3.5.0
-beanie~=1.21.0
-Mongo-Thingy~=0.15.1
-pytest~=7.0.0
-ruff~=0.2.0
-umongo~=3.1.0
