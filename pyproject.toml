@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "Library for mocking AsyncIOMotorClient built on top of mongomock."
 keywords = ["library", "mongodb"]
 readme = "README.md"
-authors = ["Michael Kryukov <mkrukov@bestplace.pro>"]
+authors = ["Michael Kryukov <kryukov.ms@ya.ru>"]
 license = "MIT"
 repository = "https://github.com/michaelkryukov/mongomock_motor"
 
