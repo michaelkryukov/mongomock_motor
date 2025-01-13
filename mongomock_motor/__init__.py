@@ -40,6 +40,8 @@ def with_async_methods(source, async_methods):
             def make_wrapper(method_name):
                 async def wrapper(self, *args, **kwargs):
                     proxy_source = self.__dict__.get(f'_{cls.__name__}{source}')
+                    if method_name == "bulk_write" and "comment" in kwargs:
+                        kwargs.pop("comment")
                     return getattr(proxy_source, method_name)(*args, **kwargs)
 
                 return wrapper
