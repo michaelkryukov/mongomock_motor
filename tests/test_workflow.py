@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 
 import bson
+import bson.tz_util
 import pytest
-from pymongo import ReplaceOne
+from pymongo import DeleteMany, InsertOne, ReplaceOne, UpdateOne
 
 from mongomock_motor import AsyncMongoMockClient
 
@@ -58,7 +59,30 @@ async def test_tz_awareness():
 @pytest.mark.anyio
 async def test_bulk_write():
     collection = AsyncMongoMockClient()['tests']['test']
-    result = await collection.bulk_write(
-        [ReplaceOne(filter={'_id': 1}, replacement={'_id': 1}, upsert=True)]
+
+    write_result = await collection.bulk_write(
+        [
+            InsertOne({'_id': 1}),
+            DeleteMany({}),
+            InsertOne({'_id': 1}),
+            InsertOne({'_id': 2}),
+            InsertOne({'_id': 3}),
+            UpdateOne({'_id': 1}, {'$set': {'foo': 'bar'}}),
+            UpdateOne({'_id': 4}, {'$inc': {'j': 1}}, upsert=True),
+            ReplaceOne({'j': 1}, {'j': 2}),
+        ],
     )
-    assert result.bulk_api_result['nUpserted'] == 1
+
+    assert write_result.bulk_api_result['nInserted'] == 4
+    assert write_result.bulk_api_result['nMatched'] == 2
+    assert write_result.bulk_api_result['nModified'] == 2
+    assert write_result.bulk_api_result['nUpserted'] == 1
+
+    documents = await collection.find({}).to_list(None)
+
+    assert documents == [
+        {'_id': 1, 'foo': 'bar'},
+        {'_id': 2},
+        {'_id': 3},
+        {'_id': 4, 'j': 2},
+    ]

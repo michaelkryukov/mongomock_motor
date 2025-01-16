@@ -339,12 +339,47 @@ class AsyncMongoMockClient:
 
 @contextmanager
 def enabled_gridfs_integration():
+    Database = (PyMongoDatabase, MongoMockDatabase)
+    Collection = (PyMongoDatabase, MongoMockCollection)
+
     with ExitStack() as stack:
-        stack.enter_context(
-            patch('gridfs.Database', (PyMongoDatabase, MongoMockDatabase))
-        )
-        stack.enter_context(
-            patch('gridfs.grid_file.Collection', (PyMongoDatabase, MongoMockCollection))
-        )
-        stack.enter_context(patch('gridfs.GridOutCursor', _create_grid_out_cursor))
+        try:
+            stack.enter_context(
+                patch(
+                    'gridfs.synchronous.grid_file.Database',
+                    Database,
+                )
+            )
+            stack.enter_context(
+                patch(
+                    'gridfs.synchronous.grid_file.Collection',
+                    Collection,
+                )
+            )
+            stack.enter_context(
+                patch(
+                    'gridfs.synchronous.grid_file.GridOutCursor',
+                    _create_grid_out_cursor,
+                )
+            )
+        except (AttributeError, ModuleNotFoundError):
+            stack.enter_context(
+                patch(
+                    'gridfs.Database',
+                    Database,
+                )
+            )
+            stack.enter_context(
+                patch(
+                    'gridfs.grid_file.Collection',
+                    Collection,
+                )
+            )
+            stack.enter_context(
+                patch(
+                    'gridfs.GridOutCursor',
+                    _create_grid_out_cursor,
+                )
+            )
+
         yield
