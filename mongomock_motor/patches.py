@@ -1,19 +1,24 @@
 from functools import wraps
 from unittest.mock import Mock
 
-from mongomock import DuplicateKeyError, helpers
+from bson.typings import _DocumentType
+from mongomock import Collection, DuplicateKeyError, MongoClient, helpers
 
 try:
-    from beanie.odm.fields import ExpressionField
+    from beanie.odm.fields import ExpressionField as _ExpressionField
 except ModuleNotFoundError:
     ExpressionField = None
+else:
+    ExpressionField = _ExpressionField
 
 
-def _provide_error_details(collection, data, exception):
+def _provide_error_details(
+    collection: Collection, data: _DocumentType, exception: Exception
+) -> Exception | DuplicateKeyError:
     if not isinstance(exception, DuplicateKeyError):
         return exception
 
-    for index in collection._store.indexes.values():
+    for index in collection._store.indexes.values():  # type: ignore[attr-defined]
         if not index.get('unique'):
             continue
 
@@ -44,7 +49,7 @@ def _provide_error_details(collection, data, exception):
     return exception
 
 
-def _patch_insert_and_ensure_uniques(collection):
+def _patch_insert_and_ensure_uniques(collection: Collection) -> Collection:
     """
     Adds details with 'keyPattern' and 'keyValue' when
     raising DuplicateKeyError from _insert or _ensure_uniques
@@ -61,10 +66,10 @@ def _patch_insert_and_ensure_uniques(collection):
 
         return wrapper
 
-    collection._insert = with_enriched_duplicate_key_error(
+    collection._insert = with_enriched_duplicate_key_error(  # type: ignore[attr-defined]
         collection._insert,
     )
-    collection._ensure_uniques = with_enriched_duplicate_key_error(
+    collection._ensure_uniques = with_enriched_duplicate_key_error(  # type: ignore[attr-defined]
         collection._ensure_uniques,
     )
 
@@ -88,7 +93,7 @@ def _normalize_strings(obj):
     return obj
 
 
-def _patch_iter_documents_and_get_dataset(collection):
+def _patch_iter_documents_and_get_dataset(collection: Collection) -> Collection:
     """
     When using beanie or other solutions that utilize classes inheriting from
     the "str" type, we need to explicitly transform these instances to plain
@@ -104,7 +109,7 @@ def _patch_iter_documents_and_get_dataset(collection):
 
         return wrapper
 
-    collection._iter_documents = _iter_documents_with_normalized_strings(
+    collection._iter_documents = _iter_documents_with_normalized_strings(  # type: ignore[attr-defined]
         collection._iter_documents,
     )
 
@@ -115,24 +120,24 @@ def _patch_iter_documents_and_get_dataset(collection):
 
         return wrapper
 
-    collection._get_dataset = _get_dataset_with_normalized_strings(
+    collection._get_dataset = _get_dataset_with_normalized_strings(  # type: ignore[attr-defined]
         collection._get_dataset,
     )
 
     return collection
 
 
-def _patch_collection_internals(collection):
+def _patch_collection_internals(collection: Collection) -> Collection:
     if getattr(collection, '_patched_by_mongomock_motor', False):
         return collection
     collection = _patch_insert_and_ensure_uniques(collection)
     collection = _patch_iter_documents_and_get_dataset(collection)
-    collection._patched_by_mongomock_motor = True
+    collection._patched_by_mongomock_motor = True  # type: ignore[attr-defined]
     return collection
 
 
-def _patch_client_internals(client):
-    client.options = Mock(timeout=None)
+def _patch_client_internals(client: MongoClient) -> MongoClient:
+    client.options = Mock(timeout=None)  # type: ignore[misc]
     return client
 
 
