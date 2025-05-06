@@ -1,0 +1,8 @@
+{
+    "include": ["mongomock_motor"],
+    "exclude": ["tests", "**/__pycache__", "**/.*"],
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": false,
+    "pythonVersion": "3.8",
+    "typeCheckingMode": "basic"
+} 
