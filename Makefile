@@ -5,7 +5,7 @@ all: check test
 check:
 	poetry run ruff check mongomock_motor tests && \
 	poetry run ruff format --check mongomock_motor tests && \
-	poetry run pyright mongomock_motor
+	poetry run pyright mongomock_motor tests
 
 
 format:
