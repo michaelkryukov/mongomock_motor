@@ -384,7 +384,7 @@ class AsyncMongoMockClient:
     def __getitem__(self, name) -> AsyncMongoMockDatabase:
         return self.get_database(name)
 
-    def __getattr__(self, name: str) -> Any | AsyncMongoMockDatabase:
+    def __getattr__(self, name: str) -> Union[Any, AsyncMongoMockDatabase]:
         if name in dir(self.__client):
             return getattr(self.__client, name)
 
