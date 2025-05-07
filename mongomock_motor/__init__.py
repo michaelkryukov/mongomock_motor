@@ -3,21 +3,20 @@ import importlib
 from asyncio.events import AbstractEventLoop
 from contextlib import ExitStack, contextmanager
 from functools import wraps
-from typing import Any
+from typing import Any, List, Optional, Union
 from unittest.mock import patch
 
-from bson.typings import _DocumentType
-from mongomock import Collection as MongoMockCollection
-from mongomock import Database as MongoMockDatabase
-from mongomock import MongoClient
-from mongomock.collection import Cursor
-from mongomock.command_cursor import CommandCursor
+from mongomock.collection import Collection as MongoMockCollection
+from mongomock.collection import Cursor as MongoMockCursor
+from mongomock.command_cursor import CommandCursor as MongoMockCommandCursor
+from mongomock.database import Database as MongoMockDatabase
 from mongomock.gridfs import _create_grid_out_cursor
+from mongomock.mongo_client import MongoClient as MongoMockMongoClient
 from pymongo.database import Database as PyMongoDatabase
 from typing_extensions import Self
 
 from .patches import _patch_client_internals, _patch_collection_internals
-from .typing import BuildInfo
+from .typing import BuildInfo, DocumentType
 
 
 def masquerade_class(name: str):
@@ -31,7 +30,7 @@ def masquerade_class(name: str):
     def decorator(cls):
         @wraps(target, updated=())
         class Wrapper(cls):
-            @property  # type: ignore[misc]
+            @property
             def __class__(self):
                 return target
 
@@ -40,7 +39,7 @@ def masquerade_class(name: str):
     return decorator
 
 
-def with_async_methods(source: str, async_methods: list[str]):
+def with_async_methods(source: str, async_methods: List[str]):
     def decorator(cls):
         for method_name in async_methods:
 
@@ -58,7 +57,7 @@ def with_async_methods(source: str, async_methods: list[str]):
     return decorator
 
 
-def with_cursor_chaining_methods(source: str, chaining_methods: list[str]):
+def with_cursor_chaining_methods(source: str, chaining_methods: List[str]):
     def decorator(cls):
         for method_name in chaining_methods:
 
@@ -83,6 +82,7 @@ def with_cursor_chaining_methods(source: str, chaining_methods: list[str]):
     [
         'add_option',
         'allow_disk_use',
+        'batch_size',
         'collation',
         'comment',
         'hint',
@@ -101,11 +101,12 @@ def with_cursor_chaining_methods(source: str, chaining_methods: list[str]):
 @with_async_methods(
     '__cursor',
     [
+        'distinct',
         'close',
     ],
 )
 class AsyncCursor:
-    def __init__(self, cursor: Cursor) -> None:
+    def __init__(self, cursor: MongoMockCursor) -> None:
         self.__cursor = cursor
 
     def __getattr__(self, name: str) -> Any:
@@ -114,7 +115,7 @@ class AsyncCursor:
     def __aiter__(self) -> Self:
         return self
 
-    async def next(self) -> _DocumentType:
+    async def next(self) -> Any:
         try:
             return next(self.__cursor)
         except StopIteration:
@@ -125,10 +126,42 @@ class AsyncCursor:
     def clone(self) -> 'AsyncCursor':
         return AsyncCursor(self.__cursor.clone())
 
-    async def distinct(self, *args, **kwargs) -> list[dict | Any]:
-        return self.__cursor.distinct(*args, **kwargs)
+    async def to_list(self, *args, **kwargs) -> List:
+        return list(self.__cursor)
 
-    async def to_list(self, *args, **kwargs) -> list[_DocumentType]:
+
+@masquerade_class('motor.motor_asyncio.AsyncIOMotorCommandCursor')
+@with_cursor_chaining_methods(
+    '__cursor',
+    [
+        'batch_size',
+    ],
+)
+@with_async_methods(
+    '__cursor',
+    [
+        'close',
+    ],
+)
+class AsyncCommandCursor:
+    def __init__(self, cursor: MongoMockCommandCursor) -> None:
+        self.__cursor = cursor
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.__cursor, name)
+
+    def __aiter__(self) -> Self:
+        return self
+
+    async def next(self) -> DocumentType:
+        try:
+            return next(self.__cursor)
+        except StopIteration:
+            raise StopAsyncIteration()
+
+    __anext__ = next
+
+    async def to_list(self, *args, **kwargs) -> List[DocumentType]:
         return list(self.__cursor)
 
 
@@ -140,7 +173,7 @@ class AsyncCursor:
     ],
 )
 class AsyncLatentCommandCursor:
-    def __init__(self, cursor: CommandCursor) -> None:
+    def __init__(self, cursor: MongoMockCommandCursor) -> None:
         self.__cursor = cursor
 
     def __getattr__(self, name: str) -> Any:
@@ -149,7 +182,7 @@ class AsyncLatentCommandCursor:
     def __aiter__(self) -> Self:
         return self
 
-    async def next(self) -> _DocumentType:
+    async def next(self) -> DocumentType:
         try:
             return next(self.__cursor)
         except StopIteration:
@@ -157,7 +190,7 @@ class AsyncLatentCommandCursor:
 
     __anext__ = next
 
-    async def to_list(self, *args, **kwargs) -> list[_DocumentType]:
+    async def to_list(self, *args, **kwargs) -> List[DocumentType]:
         return list(self.__cursor)
 
 
@@ -224,8 +257,12 @@ class AsyncMongoMockCollection:
     def aggregate(self, *args, **kwargs) -> AsyncLatentCommandCursor:
         return AsyncLatentCommandCursor(self.__collection.aggregate(*args, **kwargs))
 
-    def list_indexes(self, *args, **kwargs) -> AsyncCursor:
-        return AsyncCursor(self.__collection.list_indexes(*args, **kwargs))
+    def list_indexes(self, *args, **kwargs) -> AsyncCommandCursor:
+        return AsyncCommandCursor(
+            MongoMockCommandCursor(
+                list(self.__collection.list_indexes(*args, **kwargs))
+            )
+        )
 
 
 @masquerade_class('motor.motor_asyncio.AsyncIOMotorDatabase')
@@ -244,7 +281,7 @@ class AsyncMongoMockDatabase:
         self,
         client: 'AsyncMongoMockClient',
         database: MongoMockDatabase,
-        mock_build_info: BuildInfo | None = None,
+        mock_build_info: Optional[BuildInfo] = None,
     ) -> None:
         self.client = client
         self.__database = database
@@ -268,9 +305,9 @@ class AsyncMongoMockDatabase:
         )
 
     def aggregate(self, *args, **kwargs) -> AsyncLatentCommandCursor:
-        return AsyncLatentCommandCursor(self.__database.aggregate(*args, **kwargs))  # type: ignore[arg-type]
+        return AsyncLatentCommandCursor(self.__database.aggregate(*args, **kwargs))
 
-    async def command(self, *args, **kwargs) -> _DocumentType | BuildInfo:
+    async def command(self, *args, **kwargs) -> Union[DocumentType, BuildInfo]:
         try:
             return getattr(self.__database, 'command')(*args, **kwargs)
         except NotImplementedError:
@@ -294,7 +331,7 @@ class AsyncMongoMockDatabase:
     def __getitem__(self, name: str) -> AsyncMongoMockCollection:
         return self.get_collection(name)
 
-    def __getattr__(self, name: str) -> Any | AsyncMongoMockCollection:
+    def __getattr__(self, name: str) -> Union[AsyncMongoMockCollection, Any]:
         if name in dir(self.__database):
             return getattr(self.__database, name)
 
@@ -318,13 +355,13 @@ class AsyncMongoMockClient:
     def __init__(
         self,
         *args,
-        mock_build_info: BuildInfo | None = None,
-        mock_mongo_client: MongoClient | None = None,
-        mock_io_loop: AbstractEventLoop | None = None,
+        mock_build_info: Optional[BuildInfo] = None,
+        mock_mongo_client: Optional[MongoMockMongoClient] = None,
+        mock_io_loop: Optional[AbstractEventLoop] = None,
         **kwargs,
     ) -> None:
         self.__client = _patch_client_internals(
-            mock_mongo_client or MongoClient(*args, **kwargs)
+            mock_mongo_client or MongoMockMongoClient(*args, **kwargs)
         )
         self.__build_info = mock_build_info
         self.__io_loop = mock_io_loop

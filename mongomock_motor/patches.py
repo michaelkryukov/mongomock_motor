@@ -1,8 +1,12 @@
 from functools import wraps
+from typing import Union
 from unittest.mock import Mock
 
-from bson.typings import _DocumentType
-from mongomock import Collection, DuplicateKeyError, MongoClient, helpers
+from mongomock import DuplicateKeyError, helpers
+from mongomock.collection import Collection
+from mongomock.mongo_client import MongoClient
+
+from .typing import DocumentType
 
 try:
     from beanie.odm.fields import ExpressionField as _ExpressionField
@@ -13,12 +17,14 @@ else:
 
 
 def _provide_error_details(
-    collection: Collection, data: _DocumentType, exception: Exception
-) -> Exception | DuplicateKeyError:
+    collection: Collection,
+    data: DocumentType,
+    exception: Exception,
+) -> Union[Exception, DuplicateKeyError]:
     if not isinstance(exception, DuplicateKeyError):
         return exception
 
-    for index in collection._store.indexes.values():  # type: ignore[attr-defined]
+    for index in collection._store.indexes.values():
         if not index.get('unique'):
             continue
 
@@ -58,18 +64,18 @@ def _patch_insert_and_ensure_uniques(collection: Collection) -> Collection:
 
     def with_enriched_duplicate_key_error(fn):
         @wraps(fn)
-        def wrapper(data, *args, **kwargs):
+        def wrapper(*args, **kwargs):
             try:
-                return fn(data, *args, **kwargs)
+                return fn(*args, **kwargs)
             except DuplicateKeyError as exc:
-                raise _provide_error_details(collection, data, exc)
+                raise _provide_error_details(collection, args[0], exc)
 
         return wrapper
 
-    collection._insert = with_enriched_duplicate_key_error(  # type: ignore[attr-defined]
+    collection._insert = with_enriched_duplicate_key_error(
         collection._insert,
     )
-    collection._ensure_uniques = with_enriched_duplicate_key_error(  # type: ignore[attr-defined]
+    collection._ensure_uniques = with_enriched_duplicate_key_error(
         collection._ensure_uniques,
     )
 
@@ -109,7 +115,7 @@ def _patch_iter_documents_and_get_dataset(collection: Collection) -> Collection:
 
         return wrapper
 
-    collection._iter_documents = _iter_documents_with_normalized_strings(  # type: ignore[attr-defined]
+    collection._iter_documents = _iter_documents_with_normalized_strings(
         collection._iter_documents,
     )
 
@@ -120,7 +126,7 @@ def _patch_iter_documents_and_get_dataset(collection: Collection) -> Collection:
 
         return wrapper
 
-    collection._get_dataset = _get_dataset_with_normalized_strings(  # type: ignore[attr-defined]
+    collection._get_dataset = _get_dataset_with_normalized_strings(
         collection._get_dataset,
     )
 
@@ -132,12 +138,12 @@ def _patch_collection_internals(collection: Collection) -> Collection:
         return collection
     collection = _patch_insert_and_ensure_uniques(collection)
     collection = _patch_iter_documents_and_get_dataset(collection)
-    collection._patched_by_mongomock_motor = True  # type: ignore[attr-defined]
+    collection._patched_by_mongomock_motor = True  # type: ignore
     return collection
 
 
 def _patch_client_internals(client: MongoClient) -> MongoClient:
-    client.options = Mock(timeout=None)  # type: ignore[misc]
+    client.options = Mock(timeout=None)  # type: ignore
     return client
 
 
