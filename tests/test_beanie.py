@@ -3,6 +3,7 @@ from typing import Optional
 import pytest
 from beanie import Document, Indexed, Link, WriteRules, init_beanie
 from pydantic import BaseModel
+from typing_extensions import Annotated
 
 from mongomock_motor import AsyncMongoMockClient
 
@@ -15,7 +16,7 @@ class Category(BaseModel):
 class Product(Document):
     name: str
     description: Optional[str] = None
-    price: Indexed(float)
+    price: Annotated[float, Indexed()]
     category: Category
 
 
@@ -42,9 +43,11 @@ async def test_beanie():
     assert await find_many.count() == 1
 
     product = await Product.find_one(Product.price < 10)
+    assert product
     await product.set({Product.name: 'Gold bar'})
 
     product = await Product.find_one(Product.category.name == 'Chocolate')
+    assert product
     assert product.name == 'Gold bar'
     assert product.category.description == chocolate.description
 
@@ -67,14 +70,14 @@ async def test_beanie_links():
 
     await init_beanie(database=client.beanie_test, document_models=[Door, House])
 
-    house = House(name='Nice House', door=Door(height=2.1))
+    house = House(name='Nice House', door=Door(height=2.1))  # type: ignore
     await house.insert(link_rule=WriteRules.WRITE)
 
     houses = await House.find(House.name == 'Nice House').to_list()
     assert len(houses) == 1
     house = houses[0]
     await house.fetch_all_links()
-    assert house.door.height == 2.1
+    assert house.door.height == 2.1  # type: ignore
 
 
 @pytest.mark.anyio
@@ -84,5 +87,5 @@ async def test_beanie_sort():
 
     await Door.insert_many([Door(width=width) for width in [4, 2, 3, 1]])
 
-    doors = await Door.find().sort(Door.width).to_list()
+    doors = await Door.find().sort(Door.width).to_list()  # type: ignore
     assert [door.width for door in doors] == [1, 2, 3, 4]

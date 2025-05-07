@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from bson import ObjectId
-from pymongo.read_preferences import Primary
+from pymongo import ReadPreference
 from pymongo.results import UpdateResult
 
 from mongomock_motor import AsyncMongoMockClient
@@ -66,9 +66,10 @@ async def test_no_multiple_patching():
         assert patch_iter_documents.call_count == 1
 
         for _ in range(2):
+            # passing non default options force mongomock to create a new collection
             collection = database.get_collection(
                 'test',
-                read_preference=Primary,
+                read_preference=ReadPreference.PRIMARY_PREFERRED,
             )
             assert collection
 

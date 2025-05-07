@@ -21,21 +21,21 @@ async def test_umongo():
         class Meta:
             collection_name = 'something'
 
-    await Something.ensure_indexes()
+    await Something.ensure_indexes()  # type: ignore
 
     something1 = Something(field1='A', field2=':)', related=[])
-    await something1.commit()
+    await something1.commit()  # type: ignore
 
     with pytest.raises(
         ValidationError, match="^{'field1': 'Field value must be unique.'}$"
     ):
         duplicate = Something(field1='A', field2=':)', related=[])
-        await duplicate.commit()
+        await duplicate.commit()  # type: ignore
 
     something2 = Something(field1='B', field2=';)', related=[something1])
-    await something2.commit()
+    await something2.commit()  # type: ignore
 
-    found = await Something.find_one({'field1': 'B'})
+    found = await Something.find_one({'field1': 'B'})  # type: ignore
     assert found
     assert found.field1 == 'B'
     assert found.field2 == ';)'
@@ -60,6 +60,6 @@ async def test_umongo_enums():
         importance = fields.StrField()
 
     something1 = Something(importance='high')
-    await something1.commit()
+    await something1.commit()  # type: ignore
 
-    assert await Something.count_documents({'importance': Importance.HIGH})
+    assert await Something.count_documents({'importance': Importance.HIGH})  # type: ignore

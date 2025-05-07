@@ -47,12 +47,15 @@ async def test_tz_awareness():
     collection = AsyncMongoMockClient()['tests']['test']
     await collection.insert_one({'d': tz_aware_date})
     result = await collection.find_one()
+    assert result
     assert result['d'].tzinfo is None
 
     # Aware
     collection = AsyncMongoMockClient(tz_aware=True)['tests']['test']
     await collection.insert_one({'d': tz_aware_date})
     result = await collection.find_one()
+    assert result
+
     assert result['d'].tzinfo.__class__ is bson.tz_util.FixedOffset
 
 
