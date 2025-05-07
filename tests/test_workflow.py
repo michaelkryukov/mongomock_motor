@@ -55,7 +55,6 @@ async def test_tz_awareness():
     await collection.insert_one({'d': tz_aware_date})
     result = await collection.find_one()
     assert result
-
     assert result['d'].tzinfo.__class__ is bson.tz_util.FixedOffset
 
 
