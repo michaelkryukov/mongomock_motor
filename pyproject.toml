@@ -10,7 +10,8 @@ repository = "https://github.com/michaelkryukov/mongomock_motor"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-mongomock = "^4.3.0"
+mongomock = "^4.1.2"
+motor = ">=2.5"
 
 [tool.poetry.group.dev.dependencies]
 anyio = "^3.5.0"
@@ -20,6 +21,7 @@ pytest = "^7.0.0"
 ruff = "^0.11.0"
 umongo = "^3.1.0"
 pyright = "^1.1.350"
+pymongo = "<4.9"  # we can remove this dependenciy when we'll drop support for py3.8
 
 [build-system]
 requires = ["poetry-core"]
